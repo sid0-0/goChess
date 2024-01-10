@@ -1,0 +1,26 @@
+{{ define "Main" }}
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <script src="https://cdn.jsdelivr.net/npm/@unocss/runtime"></script>
+    <title>Chess in GO</title>
+
+<style>
+	.mainContainer{
+		height: 70vh;
+		aspect-ratio: 1;
+	}
+</style>
+  </head>
+  <body>
+	  <div class="mainContainer">
+	  {{template "Board" .}}
+	  </div>
+  </body>
+</html>
+
+{{ end }}

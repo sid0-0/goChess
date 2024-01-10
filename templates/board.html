@@ -1,0 +1,25 @@
+{{ define "Board" }}
+<style>
+  .boardContainer {
+    height: 100%;
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    grid-template-rows: repeat(8, 1fr);
+    border: 2px solid black;
+    color: red;
+  }
+</style>
+
+<div class="boardContainer">
+  {{ range .board }} {{ range . }}
+  <div
+    id="{{.File}}{{.Rank}}"
+    class="bg-{{if .Color}}black{{else}}white{{end}}"
+  >
+    {{.Piece.PieceType}}{{.Piece.Color}}
+  </div>
+  {{end}} {{ end }}
+</div>
+
+{{ end }}
