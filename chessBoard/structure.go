@@ -3,15 +3,13 @@ package chessBoard
 type COLOR int
 
 const (
-	EMPTY_COLOR COLOR = iota
-	WHITE
+	WHITE COLOR = iota
 	BLACK
 )
 
 type PIECE_TYPE string
 
 const (
-	EMPTY  PIECE_TYPE = " "
 	PAWN   PIECE_TYPE = "P"
 	KNIGHT PIECE_TYPE = "N"
 	BISHOP PIECE_TYPE = "B"
@@ -33,7 +31,7 @@ type Square struct {
 	Color      COLOR
 	LegalMoves []*Square
 	PieceMoves []*Square
-	Piece      Piece
+	Piece      *Piece
 }
 
 type CastleRight struct {

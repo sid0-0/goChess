@@ -11,6 +11,9 @@ func (b *Board) EvaluatePieceMoves() error {
 	for ri, squareRow := range b.Squares {
 		for ci := range squareRow {
 			square := &b.Squares[ri][ci]
+			if square.Piece == nil {
+				continue
+			}
 			pieceType := square.Piece.PieceType
 			if pieceType == PAWN {
 				b.loadPawnPieceMoves(square)
@@ -114,6 +117,9 @@ func (b *Board) LoadBoard(fenString string) error {
 		for cindex, cell := range row {
 			// TODO: Store in a temp place then copy only if no errors
 			currentSquare := &b.Squares[7-rindex][cindex]
+			if cell != '.' {
+				currentSquare.Piece = &Piece{}
+			}
 			if cell == '.' {
 
 			} else if 'a' <= cell && cell <= 'z' {
@@ -126,7 +132,7 @@ func (b *Board) LoadBoard(fenString string) error {
 
 			switch unicode.ToLower(cell) {
 			case '.':
-				currentSquare.Piece.PieceType = EMPTY
+
 			case 'r':
 				currentSquare.Piece.PieceType = ROOK
 			case 'n':

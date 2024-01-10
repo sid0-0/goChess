@@ -30,8 +30,6 @@ var possibleDiff = map[PIECE_TYPE][]PositionalDiff{
 	// Pawn assumes a white pawn's diff
 	PAWN: {
 		PositionalDiff{1, 0},
-		PositionalDiff{1, 1},
-		PositionalDiff{1, -1},
 	},
 	// search and evaluate
 	ROOK: {
@@ -64,8 +62,11 @@ func (b *Board) fullBoardSearch(currentSquare *Square) {
 		i := 1
 		for {
 			nr, nc := currentSquare.Ri+(i*diff.r), currentSquare.Ci+(i*diff.c)
-			if 0 <= nr && nr < 8 && 0 <= nc && nc < 8 && currentSquare.Piece.Color != b.Squares[nr][nc].Piece.Color {
+			if isIndexInRange(b, nr, nc) && (b.Squares[nr][nc].Piece == nil || currentSquare.Piece.Color != b.Squares[nr][nc].Piece.Color) {
 				newData = append(newData, &b.Squares[nr][nc])
+				if b.Squares[nr][nc].Piece != nil && currentSquare.Piece.Color != b.Squares[nr][nc].Piece.Color {
+					break
+				}
 			} else {
 				break
 			}
@@ -80,7 +81,7 @@ func (b *Board) specificSearch(currentSquare *Square) {
 	for _, diff := range possibleDiff[currentSquare.Piece.PieceType] {
 		nr := currentSquare.Ri + diff.r
 		nc := currentSquare.Ci + diff.c
-		if 0 <= nr && nr < 8 && 0 <= nc && nc < 8 && currentSquare.Piece.Color != b.Squares[nr][nc].Piece.Color {
+		if isIndexInRange(b, nr, nc) && (b.Squares[nr][nc].Piece == nil || currentSquare.Piece.Color != b.Squares[nr][nc].Piece.Color) {
 			newData = append(newData, &b.Squares[nr][nc])
 		}
 	}
@@ -93,24 +94,33 @@ func (b *Board) loadPawnPieceMoves(currentSquare *Square) {
 	if currentSquare.Piece.Color == BLACK {
 		multiplier = -1
 	}
-	for _, diff := range possibleDiff[PAWN] {
-		nr := currentSquare.Ri + multiplier*diff.r
-		nc := currentSquare.Ci + diff.c
-		if 0 <= nr && nr < 8 && 0 <= nc && nc < 8 {
-			newData = append(newData, &b.Squares[nr][nc])
-		}
-	}
 
+	// natural movement
+	movementDiff := []PositionalDiff{{1, 0}}
+	// 2 block movement only on init square
 	if (currentSquare.Piece.Color == BLACK && currentSquare.Ri == 6) || (currentSquare.Piece.Color == WHITE && currentSquare.Ri == 1) {
-		diff := PositionalDiff{2, 0}
+		movementDiff = append(movementDiff, PositionalDiff{2, 0})
+	}
+
+	for _, diff := range movementDiff {
+		nr, nc := currentSquare.Ri+(multiplier*diff.r), currentSquare.Ci+(multiplier*diff.c)
+		if isIndexInRange(b, nr, nc) && b.Squares[nr][nc].Piece == nil {
+			newData = append(newData, &b.Squares[nr][nc])
+		} else {
+			break
+		}
+	}
+
+	// check attacking movements
+	for _, diff := range []PositionalDiff{{1, 1}, {1, -1}} {
 		nr := currentSquare.Ri + multiplier*diff.r
-		nc := currentSquare.Ci + diff.c
-		if 0 <= nr && nr < 8 && 0 <= nc && nc < 8 {
+		nc := currentSquare.Ci + multiplier*diff.c
+		if isIndexInRange(b, nr, nc) && b.Squares[nr][nc].Piece != nil && currentSquare.Piece.Color != b.Squares[nr][nc].Piece.Color {
 			newData = append(newData, &b.Squares[nr][nc])
 		}
 	}
-	currentSquare.PieceMoves = newData
 
+	currentSquare.PieceMoves = newData
 }
 
 func (b *Board) loadRookPieceMoves(row int, column int) {

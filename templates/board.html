@@ -17,7 +17,9 @@
     id="{{.File}}{{.Rank}}"
     class="bg-{{if .Color}}black{{else}}white{{end}}"
   >
+  {{if .Piece}}
     {{.Piece.PieceType}}{{.Piece.Color}}
+    {{end}}
     </br>
 {{.File}}{{.Rank}}
   </div>
