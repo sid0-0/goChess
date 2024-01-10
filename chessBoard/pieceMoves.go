@@ -15,7 +15,7 @@ var possibleDiff = map[PIECE_TYPE][]PositionalDiff{
 		PositionalDiff{-1, -2},
 		PositionalDiff{-2, -1},
 		PositionalDiff{-2, 1},
-		PositionalDiff{-2, 2},
+		PositionalDiff{-1, 2},
 	},
 	KING: {
 		PositionalDiff{1, 0},
@@ -58,59 +58,62 @@ var possibleDiff = map[PIECE_TYPE][]PositionalDiff{
 	},
 }
 
-func (b Board) fullBoardSearch(currentSquare *Square) {
+func (b *Board) fullBoardSearch(currentSquare *Square) {
 	var newData []*Square
-	flag := 0
-	for i := 0; i < 8; i++ {
-		flag = 0
-		for _, diff := range possibleDiff[currentSquare.Piece.PieceType] {
+	for _, diff := range possibleDiff[currentSquare.Piece.PieceType] {
+		i := 1
+		for {
 			nr, nc := currentSquare.Ri+(i*diff.r), currentSquare.Ci+(i*diff.c)
-			if 0 <= nr && nr < 8 && 0 <= nc && nc < 8 {
+			if 0 <= nr && nr < 8 && 0 <= nc && nc < 8 && currentSquare.Piece.Color != b.Squares[nr][nc].Piece.Color {
 				newData = append(newData, &b.Squares[nr][nc])
-				flag = 1
+			} else {
+				break
 			}
-		}
-		if flag == 0 {
-			break
+			i++
 		}
 	}
 	currentSquare.PieceMoves = newData
 }
 
-func (b Board) specificSearch(currentSquare *Square) {
+func (b *Board) specificSearch(currentSquare *Square) {
 	var newData []*Square
 	for _, diff := range possibleDiff[currentSquare.Piece.PieceType] {
 		nr := currentSquare.Ri + diff.r
 		nc := currentSquare.Ci + diff.c
-		if 0 <= nr && nr < 8 && 0 <= nc && nc < 8 {
+		if 0 <= nr && nr < 8 && 0 <= nc && nc < 8 && currentSquare.Piece.Color != b.Squares[nr][nc].Piece.Color {
 			newData = append(newData, &b.Squares[nr][nc])
 		}
 	}
 	currentSquare.PieceMoves = newData
 }
 
-func (b Board) loadPawnPieceMoves(currentSquare *Square) {
+func (b *Board) loadPawnPieceMoves(currentSquare *Square) {
 	var newData []*Square
-	var updatedRow int
-	if currentSquare.Color == WHITE {
-		updatedRow = currentSquare.Ri + 1
-	} else {
-		updatedRow = currentSquare.Ri - 1
+	multiplier := 1
+	if currentSquare.Piece.Color == BLACK {
+		multiplier = -1
+	}
+	for _, diff := range possibleDiff[PAWN] {
+		nr := currentSquare.Ri + multiplier*diff.r
+		nc := currentSquare.Ci + diff.c
+		if 0 <= nr && nr < 8 && 0 <= nc && nc < 8 {
+			newData = append(newData, &b.Squares[nr][nc])
+		}
 	}
 
-	if (currentSquare.Color == WHITE && updatedRow < 7) || (currentSquare.Color == BLACK && updatedRow > 0) {
-		newData = append(newData, &b.Squares[updatedRow][currentSquare.Ci])
-		if currentSquare.Ci > 0 {
-			newData = append(newData, &b.Squares[updatedRow][currentSquare.Ci-1])
-		}
-		if currentSquare.Ci < 7 {
-			newData = append(newData, &b.Squares[updatedRow][currentSquare.Ci+1])
+	if (currentSquare.Piece.Color == BLACK && currentSquare.Ri == 6) || (currentSquare.Piece.Color == WHITE && currentSquare.Ri == 1) {
+		diff := PositionalDiff{2, 0}
+		nr := currentSquare.Ri + multiplier*diff.r
+		nc := currentSquare.Ci + diff.c
+		if 0 <= nr && nr < 8 && 0 <= nc && nc < 8 {
+			newData = append(newData, &b.Squares[nr][nc])
 		}
 	}
 	currentSquare.PieceMoves = newData
+
 }
 
-func (b Board) loadRookPieceMoves(row int, column int) {
+func (b *Board) loadRookPieceMoves(row int, column int) {
 	currentSquare := &b.Squares[row][column]
 	var newData []*Square
 	for i := 0; i < 8; i++ {

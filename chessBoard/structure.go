@@ -3,7 +3,8 @@ package chessBoard
 type COLOR int
 
 const (
-	WHITE COLOR = iota
+	EMPTY_COLOR COLOR = iota
+	WHITE
 	BLACK
 )
 
@@ -35,6 +36,16 @@ type Square struct {
 	Piece      Piece
 }
 
+type CastleRight struct {
+	Long  bool
+	Short bool
+}
+
 type Board struct {
-	Squares [8][8]Square
+	Squares         [8][8]Square
+	Turn            COLOR
+	CastleRights    map[COLOR]CastleRight
+	EnPassantSquare *Square
+	HalfMoveCounter int
+	FullMoveCounter int
 }

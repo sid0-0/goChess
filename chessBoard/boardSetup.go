@@ -2,6 +2,7 @@ package chessBoard
 
 import (
 	"errors"
+	"strconv"
 	"strings"
 	"unicode"
 )
@@ -29,15 +30,77 @@ func (b *Board) EvaluateLegalMoves() error {
 }
 
 func (b *Board) LoadBoard(fenString string) error {
-	verboseFen := ""
-	for _, c := range fenString {
-		if c >= '1' && c <= '8' {
-			verboseFen += strings.Repeat(".", int(c-'0'))
-		} else {
-			verboseFen += string(c)
+	// rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
+	parts := strings.Split(fenString, " ")
+
+	// Assessing Turn
+	if parts[1] == "w" {
+		b.Turn = WHITE
+	} else {
+		b.Turn = BLACK
+	}
+
+	// Assessing CastleRights
+	newCastleRights := map[COLOR]CastleRight{
+		WHITE: {},
+		BLACK: {},
+	}
+	if rights, ok := b.CastleRights[WHITE]; ok {
+		if strings.ContainsRune(parts[2], 'K') {
+			rights.Long = true
+		}
+		if strings.ContainsRune(parts[2], 'Q') {
+			rights.Short = true
 		}
 	}
-	rows := strings.Split(verboseFen, "/")
+
+	if rights, ok := b.CastleRights[BLACK]; ok {
+		if strings.ContainsRune(parts[2], 'k') {
+			rights.Long = true
+		}
+		if strings.ContainsRune(parts[2], 'q') {
+			rights.Short = true
+		}
+	}
+
+	b.CastleRights = newCastleRights
+
+	// Assessing EnPassantSquare
+	if len(parts[3]) > 2 {
+		return errors.New("Incorrect EnPassant Square in FEN")
+	}
+	if parts[3] != "-" {
+		r, c := int(parts[3][0]-'a'), int(parts[3][1]-'1')
+		b.EnPassantSquare = &b.Squares[r][c]
+	}
+
+	// Loading HalfMoveCounter and FullMoveCounter
+	val, err := strconv.Atoi(parts[4])
+	if err != nil {
+		return errors.New("Incorrect Half move count format")
+	}
+	b.HalfMoveCounter = val
+
+	val, err = strconv.Atoi(parts[4])
+	if err != nil {
+		return errors.New("Incorrect Full move count format")
+	}
+	b.FullMoveCounter = val
+
+	// Generating Board configuration
+	if len(parts) != 1 && len(parts) != 6 {
+		return errors.New("Insufficient data in FEN")
+	}
+
+	placement := ""
+	for _, c := range parts[0] {
+		if c >= '1' && c <= '8' {
+			placement += strings.Repeat(".", int(c-'0'))
+		} else {
+			placement += string(c)
+		}
+	}
+	rows := strings.Split(placement, "/")
 	if len(rows) != 8 {
 		return errors.New("Incorrect row count in FEN")
 	}
@@ -50,13 +113,13 @@ func (b *Board) LoadBoard(fenString string) error {
 	for rindex, row := range rows {
 		for cindex, cell := range row {
 			// TODO: Store in a temp place then copy only if no errors
-			currentSquare := &b.Squares[rindex][cindex]
+			currentSquare := &b.Squares[7-rindex][cindex]
 			if cell == '.' {
 
 			} else if 'a' <= cell && cell <= 'z' {
-				currentSquare.Piece.Color = WHITE
-			} else if 'A' <= cell && cell <= 'Z' {
 				currentSquare.Piece.Color = BLACK
+			} else if 'A' <= cell && cell <= 'Z' {
+				currentSquare.Piece.Color = WHITE
 			} else {
 				return errors.New("Incorrect characters in FEN[casing]")
 			}
@@ -82,5 +145,6 @@ func (b *Board) LoadBoard(fenString string) error {
 		}
 	}
 	b.EvaluateLegalMoves()
+	// b.Squares[0][1].PieceMoves = append(b.Squares[0][1].PieceMoves, &b.Squares[2][2])
 	return nil
 }

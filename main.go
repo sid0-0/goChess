@@ -42,8 +42,7 @@ func main() {
 	newBoard := chessBoard.New()
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-type", "text/html")
-		fmt.Println(len(newBoard.Squares))
-		// spew.Dump(newBoard.Squares)
+		//spew.Dump(newBoard.Squares[0][1])
 		allTemplates.ExecuteTemplate(w, "Main", map[string]any{"board": newBoard.GetRepresentationalSquares()})
 	})
 
