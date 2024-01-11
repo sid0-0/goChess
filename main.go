@@ -6,6 +6,7 @@ import (
 	"io/fs"
 	"net/http"
 	"path/filepath"
+	"slices"
 	"strings"
 	"text/template"
 	"time"
@@ -42,10 +43,32 @@ func main() {
 	newBoard := chessBoard.New()
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-type", "text/html")
-		//spew.Dump(newBoard.Squares[0][1])
 		allTemplates.ExecuteTemplate(w, "Main", map[string]any{"board": newBoard.GetRepresentationalSquares()})
 	})
 
+	r.Post("/highlight/{square}", func(w http.ResponseWriter, r *http.Request) {
+		squareId := chi.URLParam(r, "square")
+		fmt.Println(r.Body)
+		defer r.Body.Close()
+		if len(squareId) != 2 {
+			w.WriteHeader(500)
+			return
+		}
+		ri, ci := int(squareId[1]-'1'), int(squareId[0]-'a')
+		square := newBoard.GetSquare(ri, ci)
+
+		if square == nil {
+			w.WriteHeader(500)
+			return
+		}
+
+		// hx-include will allow replacing only highlighted and to-be-highlighted squares but I couldn't get it working
+		for i := range newBoard.Squares {
+			for j := range newBoard.Squares[i] {
+				allTemplates.ExecuteTemplate(w, "Square", map[string]any{"data": newBoard.Squares[i][j], "highlight": slices.Contains(square.PieceMoves, &newBoard.Squares[i][j])})
+			}
+		}
+	})
 	http.ListenAndServe("127.0.0.1:8080", r)
 	fmt.Println("Listening on port 8080")
 }

@@ -62,7 +62,7 @@ func (b *Board) fullBoardSearch(currentSquare *Square) {
 		i := 1
 		for {
 			nr, nc := currentSquare.Ri+(i*diff.r), currentSquare.Ci+(i*diff.c)
-			if isIndexInRange(b, nr, nc) && (b.Squares[nr][nc].Piece == nil || currentSquare.Piece.Color != b.Squares[nr][nc].Piece.Color) {
+			if b.isIndexInRange(nr, nc) && (b.Squares[nr][nc].Piece == nil || currentSquare.Piece.Color != b.Squares[nr][nc].Piece.Color) {
 				newData = append(newData, &b.Squares[nr][nc])
 				if b.Squares[nr][nc].Piece != nil && currentSquare.Piece.Color != b.Squares[nr][nc].Piece.Color {
 					break
@@ -81,7 +81,7 @@ func (b *Board) specificSearch(currentSquare *Square) {
 	for _, diff := range possibleDiff[currentSquare.Piece.PieceType] {
 		nr := currentSquare.Ri + diff.r
 		nc := currentSquare.Ci + diff.c
-		if isIndexInRange(b, nr, nc) && (b.Squares[nr][nc].Piece == nil || currentSquare.Piece.Color != b.Squares[nr][nc].Piece.Color) {
+		if b.isIndexInRange(nr, nc) && (b.Squares[nr][nc].Piece == nil || currentSquare.Piece.Color != b.Squares[nr][nc].Piece.Color) {
 			newData = append(newData, &b.Squares[nr][nc])
 		}
 	}
@@ -104,7 +104,7 @@ func (b *Board) loadPawnPieceMoves(currentSquare *Square) {
 
 	for _, diff := range movementDiff {
 		nr, nc := currentSquare.Ri+(multiplier*diff.r), currentSquare.Ci+(multiplier*diff.c)
-		if isIndexInRange(b, nr, nc) && b.Squares[nr][nc].Piece == nil {
+		if b.isIndexInRange(nr, nc) && b.Squares[nr][nc].Piece == nil {
 			newData = append(newData, &b.Squares[nr][nc])
 		} else {
 			break
@@ -115,24 +115,10 @@ func (b *Board) loadPawnPieceMoves(currentSquare *Square) {
 	for _, diff := range []PositionalDiff{{1, 1}, {1, -1}} {
 		nr := currentSquare.Ri + multiplier*diff.r
 		nc := currentSquare.Ci + multiplier*diff.c
-		if isIndexInRange(b, nr, nc) && b.Squares[nr][nc].Piece != nil && currentSquare.Piece.Color != b.Squares[nr][nc].Piece.Color {
+		if b.isIndexInRange(nr, nc) && b.Squares[nr][nc].Piece != nil && currentSquare.Piece.Color != b.Squares[nr][nc].Piece.Color {
 			newData = append(newData, &b.Squares[nr][nc])
 		}
 	}
 
-	currentSquare.PieceMoves = newData
-}
-
-func (b *Board) loadRookPieceMoves(row int, column int) {
-	currentSquare := &b.Squares[row][column]
-	var newData []*Square
-	for i := 0; i < 8; i++ {
-		if i != row {
-			newData = append(newData, &b.Squares[i][column])
-		}
-		if i != column {
-			newData = append(newData, &b.Squares[row][i])
-		}
-	}
 	currentSquare.PieceMoves = newData
 }

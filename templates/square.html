@@ -1,0 +1,20 @@
+{{ define "Square" }}
+<div
+  id="{{.data.File}}{{.data.Rank}}"
+  class="bg-{{if .data.Color}}yellow-700{{else}}yellow-50{{end}} flex items-center grid-justify-center relative"
+  hx-swap-oob="true"
+>
+  {{if .data.Piece}}
+  <img
+    class="piece piece_{{.data.Piece.PieceType}}{{.data.Piece.Color}} h-95% cursor-grab"
+    hx-post="/highlight/{{.data.File}}{{.data.Rank}}"
+    hx-include="img"
+  />
+  {{end}} {{if .highlight}}
+  <div
+    class="legalMove {{if .data.Piece}} legalMove_attacking {{else}} legalMove_nonAttacking {{end}}"
+  ></div>
+  {{end}}
+</div>
+
+{{end}}

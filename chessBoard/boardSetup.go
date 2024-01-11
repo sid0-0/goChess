@@ -8,9 +8,9 @@ import (
 )
 
 func (b *Board) EvaluatePieceMoves() error {
-	for ri, squareRow := range b.Squares {
-		for ci := range squareRow {
-			square := &b.Squares[ri][ci]
+	for i := range b.Squares {
+		for j := range b.Squares[i] {
+			square := &b.Squares[i][j]
 			if square.Piece == nil {
 				continue
 			}
@@ -29,6 +29,11 @@ func (b *Board) EvaluatePieceMoves() error {
 
 func (b *Board) EvaluateLegalMoves() error {
 	b.EvaluatePieceMoves()
+	for i := range b.Squares {
+		for j := range b.Squares[i] {
+			b.LoadLegalMoves(&b.Squares[i][j])
+		}
+	}
 	return nil
 }
 
