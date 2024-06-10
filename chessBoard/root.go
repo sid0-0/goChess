@@ -36,3 +36,15 @@ func (b Board) GetRepresentationalSquares() [8][8]Square {
 	}
 	return ans
 }
+
+// func (b *Board) makeMove(oldSquare *Square, newSquare *Square) {
+// 	var newData []*Square
+// 	for _, diff := range possibleDiff[newSquare.Piece.PieceType] {
+// 		nr := newSquare.Ri + diff.r
+// 		nc := newSquare.Ci + diff.c
+// 		if b.isIndexInRange(nr, nc) && (b.Squares[nr][nc].Piece == nil || newSquare.Piece.Color != b.Squares[nr][nc].Piece.Color) {
+// 			newData = append(newData, &b.Squares[nr][nc])
+// 		}
+// 	}
+// 	newSquare.PieceMoves = newData
+// }

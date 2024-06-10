@@ -3,11 +3,14 @@ module gochess
 go 1.21.5
 
 require (
+	github.com/Masterminds/sprig/v3 v3.2.3
+	github.com/go-chi/chi/v5 v5.0.11
+)
+
+require (
 	github.com/Masterminds/goutils v1.1.1 // indirect
 	github.com/Masterminds/semver/v3 v3.2.1 // indirect
-	github.com/Masterminds/sprig/v3 v3.2.3 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/go-chi/chi/v5 v5.0.11 // indirect
 	github.com/google/uuid v1.5.0 // indirect
 	github.com/huandu/xstrings v1.4.0 // indirect
 	github.com/imdario/mergo v0.3.16 // indirect

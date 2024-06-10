@@ -20,9 +20,9 @@ var allTemplates *template.Template
 
 func ParseAllTemplates(location string) error {
 	allTemplates = template.New("").Funcs(sprig.FuncMap())
-	return filepath.WalkDir(location, func(path string, _ fs.DirEntry, err error) error {
+	return filepath.WalkDir(location, func(path string, _ fs.DirEntry, _ error) error {
 		if strings.HasSuffix(path, ".html") {
-			_, err = allTemplates.New("").Funcs(sprig.FuncMap()).ParseFiles(path)
+			_, err := allTemplates.New("").Funcs(sprig.FuncMap()).ParseFiles(path)
 			return err
 		}
 		return nil
@@ -46,7 +46,9 @@ func main() {
 		allTemplates.ExecuteTemplate(w, "Main", map[string]any{"board": newBoard.GetRepresentationalSquares()})
 	})
 
-	r.Post("/highlight/{square}", func(w http.ResponseWriter, r *http.Request) {
+	var highlighted *chessBoard.Square
+
+	r.Post("/move/{square}", func(w http.ResponseWriter, r *http.Request) {
 		squareId := chi.URLParam(r, "square")
 		fmt.Println(r.Body)
 		defer r.Body.Close()
@@ -62,6 +64,26 @@ func main() {
 			return
 		}
 
+		err = newBoard.MakeMove(highlighted, square)
+		allTemplates.ExecuteTemplate(w, "Main", map[string]any{"board": newBoard.GetRepresentationalSquares()})
+	})
+
+	r.Post("/highlight/{square}", func(w http.ResponseWriter, r *http.Request) {
+		squareId := chi.URLParam(r, "square")
+		fmt.Println(r.Body)
+		defer r.Body.Close()
+		if len(squareId) != 2 {
+			w.WriteHeader(500)
+			return
+		}
+		ri, ci := int(squareId[1]-'1'), int(squareId[0]-'a')
+		square := newBoard.GetSquare(ri, ci)
+
+		if square == nil {
+			w.WriteHeader(500)
+			return
+		}
+		highlighted = square
 		// hx-include will allow replacing only highlighted and to-be-highlighted squares but I couldn't get it working
 		for i := range newBoard.Squares {
 			for j := range newBoard.Squares[i] {
@@ -69,6 +91,6 @@ func main() {
 			}
 		}
 	})
+
 	http.ListenAndServe("127.0.0.1:8080", r)
-	fmt.Println("Listening on port 8080")
 }
