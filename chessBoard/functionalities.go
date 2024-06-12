@@ -6,6 +6,9 @@ import (
 )
 
 func (b *Board) MakeMove(oldSquare *Square, newSquare *Square) error {
+	if oldSquare.Piece.Color != b.Turn {
+		return errors.New("not your turn")
+	}
 	if !slices.Contains(oldSquare.LegalMoves, newSquare) {
 		return errors.New("invalid move")
 	}
@@ -13,5 +16,14 @@ func (b *Board) MakeMove(oldSquare *Square, newSquare *Square) error {
 	oldSquare.Piece = nil
 
 	err := b.EvaluateLegalMoves()
-	return err
+	if err != nil {
+		return err
+	}
+
+	if b.Turn == BLACK {
+		b.Turn = WHITE
+	} else {
+		b.Turn = BLACK
+	}
+	return nil
 }

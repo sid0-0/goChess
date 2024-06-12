@@ -22,7 +22,8 @@ func New() *Board {
 			currentSquare.Color = BLACK
 		}
 	}
-	err := newBoard.LoadBoard("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
+	// err := newBoard.LoadBoard("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
+	err := newBoard.LoadBoard("rnb1kbnr/pppppppp/8/3q4/8/4K3/PPPPPPPP/RNBQ1BNR w KQkq - 0 1")
 	if err != nil {
 		fmt.Println("Error loading board.", err)
 	}

@@ -53,18 +53,26 @@ func main() {
 		fmt.Println(r.Body)
 		defer r.Body.Close()
 		if len(squareId) != 2 {
-			w.WriteHeader(500)
+			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 		ri, ci := int(squareId[1]-'1'), int(squareId[0]-'a')
 		square := newBoard.GetSquare(ri, ci)
 
 		if square == nil {
-			w.WriteHeader(500)
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte("Invalid square"))
 			return
 		}
 
 		err = newBoard.MakeMove(highlighted, square)
+
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(err.Error()))
+			return
+		}
+
 		allTemplates.ExecuteTemplate(w, "Main", map[string]any{"board": newBoard.GetRepresentationalSquares()})
 	})
 
@@ -73,21 +81,21 @@ func main() {
 		fmt.Println(r.Body)
 		defer r.Body.Close()
 		if len(squareId) != 2 {
-			w.WriteHeader(500)
+			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 		ri, ci := int(squareId[1]-'1'), int(squareId[0]-'a')
 		square := newBoard.GetSquare(ri, ci)
 
 		if square == nil {
-			w.WriteHeader(500)
+			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 		highlighted = square
 		// hx-include will allow replacing only highlighted and to-be-highlighted squares but I couldn't get it working
 		for i := range newBoard.Squares {
 			for j := range newBoard.Squares[i] {
-				allTemplates.ExecuteTemplate(w, "Square", map[string]any{"data": newBoard.Squares[i][j], "highlight": slices.Contains(square.PieceMoves, &newBoard.Squares[i][j])})
+				allTemplates.ExecuteTemplate(w, "Square", map[string]any{"data": newBoard.Squares[i][j], "highlight": slices.Contains(square.LegalMoves, &newBoard.Squares[i][j])})
 			}
 		}
 	})
