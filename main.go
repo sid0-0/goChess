@@ -100,5 +100,10 @@ func main() {
 		}
 	})
 
-	http.ListenAndServe("127.0.0.1:8080", r)
+	err = http.ListenAndServe(":8080", r)
+	if err != nil {
+		fmt.Println("Server failed to start:", err)
+	} else {
+		fmt.Println("Started Go Chess Server at port :8080")
+	}
 }
