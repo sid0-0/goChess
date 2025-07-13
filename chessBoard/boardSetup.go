@@ -15,11 +15,12 @@ func (b *Board) EvaluatePieceMoves() error {
 				continue
 			}
 			pieceType := square.Piece.PieceType
-			if pieceType == PAWN {
+			switch pieceType {
+			case PAWN:
 				b.loadPawnPieceMoves(square)
-			} else if pieceType == KING || pieceType == KNIGHT {
+			case KING, KNIGHT:
 				b.specificSearch(square)
-			} else {
+			default:
 				b.fullBoardSearch(square)
 			}
 		}
