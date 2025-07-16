@@ -5,6 +5,8 @@ import (
 	"gochess/chessBoard"
 	"io/fs"
 	"net/http"
+	"os"
+	"os/exec"
 	"path/filepath"
 	"slices"
 	"strings"
@@ -103,9 +105,21 @@ func main() {
 	r.Handle("/static/*", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
 	r.Get("/wasm", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("This is a placeholder for the WebAssembly endpoint."))
-		// w.Header().Set("Content-Type", "application/wasm")
-		// http.ServeFile(w, r, "chessBoard.wasm")
+		cmd := exec.Command("go", "build", "-o", "hello.wasm", "wasmPackage/wasm.go")
+		cmd.Env = append(os.Environ(), "GOOS=js", "GOARCH=wasm")
+		output, err := cmd.CombinedOutput()
+
+		if err != nil {
+			fmt.Println("Failed to build WebAssembly module:", err, string(output))
+			http.Error(w, fmt.Sprintf("Failed to build WebAssembly module: %s\n%s", err, output), http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/wasm")
+		http.ServeFile(w, r, "hello.wasm")
+
+		// Clean up the generated file after serving it
+		os.Remove("hello.wasm")
 	})
 
 	err = http.ListenAndServe(":8080", r)
