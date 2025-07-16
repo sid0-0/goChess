@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"gochess/chessBoard"
 	"io/fs"
@@ -93,11 +94,29 @@ func main() {
 		}
 		highlighted = square
 		// hx-include will allow replacing only highlighted and to-be-highlighted squares but I couldn't get it working
-		for i := range newBoard.Squares {
+		for _i := range newBoard.Squares {
+			// Reverse the row index to match the board's visual representation for WHITE
+			i := 7 - _i
 			for j := range newBoard.Squares[i] {
 				allTemplates.ExecuteTemplate(w, "Square", map[string]any{"data": newBoard.Squares[i][j], "highlight": slices.Contains(square.LegalMoves, &newBoard.Squares[i][j])})
 			}
 		}
+	})
+
+	r.Get("/legalMoves", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-type", "application/json")
+		legalMovesMap := make(map[string][]string)
+		for _, row := range newBoard.Squares {
+			for _, square := range row {
+				key := fmt.Sprintf("%s%s", square.File, square.Rank)
+				legalMoveSquares := make([]string, 0, len(square.LegalMoves))
+				for _, legalSquare := range square.LegalMoves {
+					legalMoveSquares = append(legalMoveSquares, fmt.Sprintf("%s%s", legalSquare.File, legalSquare.Rank))
+				}
+				legalMovesMap[key] = legalMoveSquares
+			}
+		}
+		json.NewEncoder(w).Encode(legalMovesMap)
 	})
 
 	err = http.ListenAndServe(":8080", r)

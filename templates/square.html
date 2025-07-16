@@ -2,18 +2,13 @@
 <div
   id="{{.data.File}}{{.data.Rank}}"
   class="bg-{{if .data.Color}}yellow-700{{else}}yellow-50{{end}} flex items-center grid-justify-center relative"
-  hx-swap-oob="true"
-  {{if
-  not
-  .data.Piece}}
-  hx-post="/move/{{.data.File}}{{.data.Rank}}"
-  hx-trigger="click"
-  {{end}}
+  data-file="{{.data.File}}"
+  data-rank="{{.data.Rank}}"
 >
   {{if .data.Piece}}
   <img
-    class="piece piece_{{.data.Piece.PieceType}}{{.data.Piece.Color}} h-95% cursor-grab"
-    hx-post="/highlight/{{.data.File}}{{.data.Rank}}"
+    class="piece piece_{{.data.Piece.PieceType}}{{.data.Piece.Color}} h-full cursor-grab"
+    onclick="onPieceClick(event)"
     hx-include="img"
   />
   {{end}} {{if .highlight}}

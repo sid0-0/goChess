@@ -82,6 +82,83 @@
         border-radius: 50%;
       }
     </style>
+    <script>
+      let legalMoves = {};
+      let selectedPiece = null;
+      function fetchLegalMoves() {
+        fetch("/legalMoves")
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error("Network response was not ok");
+            }
+            return response.json();
+          })
+          .then((data) => {
+            legalMoves = data;
+          })
+          .catch((error) =>
+            console.error("Error fetching legal moves:", error)
+          );
+      }
+
+      function onInit() {
+        fetchLegalMoves();
+        // document.addEventListener("htmx:afterRequest", function (e) {
+        //   if (e.detail.elt.classList.contains("boardContainer")) {
+        //     fetchLegalMoves();
+        //   }
+        // });
+      }
+      onInit();
+
+      function onPieceClick(e) {
+        const target = e.currentTarget;
+        const file = target.parentElement.dataset.file;
+        const rank = target.parentElement.dataset.rank;
+        const selectedSquare = `${file}${rank}`;
+        if (selectedPiece === selectedSquare) {
+          return;
+        }
+        const highlightedSquareNodes = document.querySelectorAll(".legalMove");
+        highlightedSquareNodes.forEach((node) => {
+          node.remove();
+        });
+        selectedPiece = `${file}${rank}`;
+        legalMoves[selectedPiece]?.forEach((targetSquare) => {
+          const square = document.getElementById(targetSquare);
+          console.log("Highlighting square:", square);
+          if (!square) return;
+          const hasPiece = square.children.length > 0;
+          const highlightDiv = document.createElement("div");
+          highlightDiv.classList.add("legalMove");
+          if (hasPiece) {
+            highlightDiv.classList.add("legalMove_attacking");
+          } else {
+            highlightDiv.classList.add("legalMove_nonAttacking");
+          }
+          square.appendChild(highlightDiv);
+        });
+      }
+
+      function onSquareClick(e) {
+        const target = e.currentTarget;
+
+        const highlightedSquareNodes = document.querySelectorAll(".legalMove");
+
+        const { file, rank } = target.dataset;
+
+        htmx.ajax(
+          "POST",
+          highlightedSquareNodes.length > 0
+            ? "/move/"
+            : "/highlight/" + file + rank,
+          {
+            target: ".boardContainer",
+            swap: "innerHTML",
+          }
+        );
+      }
+    </script>
   </head>
   <body>
     <div class="mainContainer">{{template "Board" .}}</div>
