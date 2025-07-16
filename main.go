@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"gochess/chessBoard"
+	"gochess/wasmBoard"
 	"io/fs"
 	"net/http"
 	"path/filepath"
@@ -100,7 +101,22 @@ func main() {
 		}
 	})
 
+	r.Get("/wasm", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println("Generating WASM module")
+		_, err := wasmBoard.CreateChessWASMBinary()
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			http.Error(w, "Failed to generate WASM module: "+err.Error(), http.StatusInternalServerError)
+			return
+		} else {
+			fmt.Println("WASM module generated successfully")
+		}
+		w.Header().Set("Content-Type", "application/wasm")
+		http.ServeFile(w, r, "chessBoard.wasm")
+	})
+
 	err = http.ListenAndServe(":8080", r)
+	fmt.Println(err)
 	if err != nil {
 		fmt.Println("Server failed to start:", err)
 	} else {
