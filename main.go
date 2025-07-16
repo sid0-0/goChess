@@ -102,6 +102,12 @@ func main() {
 
 	r.Handle("/static/*", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
+	r.Get("/wasm", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("This is a placeholder for the WebAssembly endpoint."))
+		// w.Header().Set("Content-Type", "application/wasm")
+		// http.ServeFile(w, r, "chessBoard.wasm")
+	})
+
 	err = http.ListenAndServe(":8080", r)
 	if err != nil {
 		fmt.Println("Server failed to start:", err)
