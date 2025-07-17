@@ -87,23 +87,23 @@
         border-radius: 50%;
       }
     </style>
-    <!-- <script src="/wasm_exec.js"></script> -->
+    <script src="static/wasm_exec.js"></script>
     <script>
       (async () => {
-        // let chessWASM;
-        // const go = new Go();
-        // const result = await WebAssembly.instantiateStreaming(
-        //   fetch("/wasm"),
-        //   go.importObject
-        // );
-        // chessWASM = result.instance;
-        // go.run(result.instance);
+        let chessWASM;
+        const go = new Go();
+        const result = await WebAssembly.instantiateStreaming(
+          fetch("/wasm"),
+          go.importObject
+        );
+        chessWASM = result.instance;
+        go.run(result.instance);
 
-        // document.chessWASM = chessWASM;
+        document.chessWASM = chessWASM;
 
-        // console.log("WASM module loaded successfully:", chessWASM);
+        console.log("WASM module loaded successfully:", chessWASM);
 
-        const chessWASM = fetch("/wasm");
+        // const chessWASM = fetch("/wasm");
         //   .catch((error) => {
         //     console.error("Error fetching WASM module:", error);
         //     alert("Failed to load the chess module. Please try again later.");
