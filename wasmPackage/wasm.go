@@ -1,6 +1,6 @@
 //go:build js && wasm
 
-package chessBoard
+package main
 
 import "syscall/js"
 
@@ -11,5 +11,4 @@ func main() {
 		js.Global().Get("console").Call("log", msg)
 		return js.ValueOf(msg)
 	}))
-	select {}
 }

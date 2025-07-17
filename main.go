@@ -105,8 +105,10 @@ func main() {
 	r.Handle("/static/*", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
 	r.Get("/wasm", func(w http.ResponseWriter, r *http.Request) {
-		cmd := exec.Command("go", "build", "-o", "hello.wasm", "wasmPackage/wasm.go")
+		os.Remove("hello.wasm")
+		cmd := exec.Command("go", "build", "-o", "hello.wasm", "./wasmPackage")
 		cmd.Env = append(os.Environ(), "GOOS=js", "GOARCH=wasm")
+
 		output, err := cmd.CombinedOutput()
 
 		if err != nil {
@@ -116,7 +118,13 @@ func main() {
 		}
 
 		w.Header().Set("Content-Type", "application/wasm")
-		http.ServeFile(w, r, "hello.wasm")
+		wasmFileBytes, err := os.ReadFile("hello.wasm")
+		if err != nil {
+			fmt.Println("Failed to read WebAssembly file:", err)
+			http.Error(w, fmt.Sprintf("Failed to read WebAssembly file: %s", err), http.StatusInternalServerError)
+			return
+		}
+		w.Write(wasmFileBytes)
 
 		// Clean up the generated file after serving it
 		os.Remove("hello.wasm")
