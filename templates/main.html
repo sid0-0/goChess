@@ -92,33 +92,20 @@
       (async () => {
         let chessWASM;
         const go = new Go();
-        const result = await WebAssembly.instantiateStreaming(
+        const result = WebAssembly.instantiateStreaming(
           fetch("/wasm"),
           go.importObject
-        );
-        chessWASM = result.instance;
-        go.run(result.instance);
-
-        window.chessWASM = chessWASM;
-
-        console.log("WASM module loaded successfully:", chessWASM);
-        console.log(hello("World"));
-
-        // const chessWASM = fetch("/wasm");
-        //   .catch((error) => {
-        //     console.error("Error fetching WASM module:", error);
-        //     alert("Failed to load the chess module. Please try again later.");
-        //   })
-        //   .then((response) => {
-        //     console.log(response);
-        //     if (!response.ok) {
-        //       throw new Error("Network response was not ok");
-        //     }
-        //     return response.arrayBuffer();
-        //   })
-        //   .then((bytes) => WebAssembly.instantiate(bytes, {}))
-        //   .then((obj) => obj.instance.exports);
+        ).then(({ instance }) => {
+          go.run(instance);
+        });
       })();
+
+      addEventListener("chessWASMReady", (event) => {
+        const { detail } = event;
+        const { chessWASM } = detail;
+        console.log("chessWASM module is ready");
+        console.log("MARCO!", chessWASM.marco());
+      });
     </script>
   </head>
   <body>
