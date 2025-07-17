@@ -100,6 +100,8 @@ func main() {
 		}
 	})
 
+	r.Handle("/static/*", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
+
 	err = http.ListenAndServe(":8080", r)
 	if err != nil {
 		fmt.Println("Server failed to start:", err)
