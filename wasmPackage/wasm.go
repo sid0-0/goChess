@@ -7,24 +7,6 @@ import (
 	"syscall/js"
 )
 
-func interfaceToJsObject(argsObj interface{}) js.Value {
-	if argsObj == nil {
-		return js.Undefined()
-	}
-	switch v := argsObj.(type) {
-	case js.Value:
-		return v
-	case map[string]interface{}:
-		obj := js.Global().Get("Object").New()
-		for k, val := range v {
-			obj.Set(k, interfaceToJsObject(val))
-		}
-		return obj
-	default:
-		return js.ValueOf(argsObj)
-	}
-}
-
 func getAllValidMoves(fen string) map[string][]string {
 	// Create a board
 	board := chessBoard.New()
@@ -48,27 +30,49 @@ func getAllValidMoves(fen string) map[string][]string {
 	return allLegalMoves
 }
 
+func consoleLog(args ...interface{}) {
+	js.Global().Get("console").Call("log", args...)
+}
+
 func main() {
-	chessWASM := js.Global().Get("Object").New()
-	chessWASM.Set("marco", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-		return js.ValueOf("polo")
-	}))
 
-	chessWASM.Set("getAllValidMoves", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-		if len(args) < 1 {
-			errorObj := js.Global().Get("Error").New("FEN string is required")
-			js.Global().Call("throw", errorObj)
-			return nil
+	chessWASM := map[string]interface{}{
+		"marco": (func(this js.Value, args []js.Value) interface{} {
+			return js.ValueOf("polo")
+		}),
+		"getAllValidMoves": (func(this js.Value, args []js.Value) interface{} {
+			if len(args) < 1 {
+				errorObj := js.Global().Get("Error").New("FEN string is required")
+				js.Global().Call("throw", errorObj)
+				return nil
+			}
+			fenString := args[0].String()
+			return getAllValidMoves(fenString)
+		}),
+	}
+
+	chessWASMWithPanicWrapper := map[string]interface{}{}
+	for key, value := range chessWASM {
+		if fn, ok := value.(func(this js.Value, args []js.Value) interface{}); ok {
+			chessWASMWithPanicWrapper[key] = js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+				defer func() {
+					if r := recover(); r != nil {
+						errorObj := js.Global().Get("Error").New("Panic occurred: " + r.(string))
+						js.Global().Call("throw", errorObj)
+					}
+				}()
+				return fn(this, args)
+			})
+		} else {
+			chessWASMWithPanicWrapper[key] = value
 		}
-		fenString := args[0].String()
-		return getAllValidMoves(fenString)
-	}))
+	}
 
-	js.Global().Set("chessWASM", chessWASM)
+	js.Global().Set("chessWASM", chessWASMWithPanicWrapper)
 
-	eventDetails := interfaceToJsObject(map[string]interface{}{
+	eventDetails := (map[string]interface{}{
 		"detail": map[string]interface{}{
-			"chessWASM": chessWASM,
+			"chessWASM": chessWASMWithPanicWrapper,
 		},
 	})
 
