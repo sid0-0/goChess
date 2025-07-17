@@ -99,9 +99,10 @@
         chessWASM = result.instance;
         go.run(result.instance);
 
-        document.chessWASM = chessWASM;
+        window.chessWASM = chessWASM;
 
         console.log("WASM module loaded successfully:", chessWASM);
+        console.log(hello("World"));
 
         // const chessWASM = fetch("/wasm");
         //   .catch((error) => {
