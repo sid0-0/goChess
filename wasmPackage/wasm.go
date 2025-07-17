@@ -12,9 +12,11 @@ func getAllValidMoves(fen string) map[string][]string {
 	board := chessBoard.New()
 	allLegalMoves := map[string][]string{}
 	// Load the given fen
-	err := board.LoadBoard(fen)
-	if err != nil {
-		return allLegalMoves
+	if fen != "" {
+		err := board.LoadBoard(fen)
+		if err != nil {
+			return allLegalMoves
+		}
 	}
 	// collect all legal moves in an object
 	for _, row := range board.Squares {
@@ -33,21 +35,36 @@ func getAllValidMoves(fen string) map[string][]string {
 func consoleLog(args ...interface{}) {
 	js.Global().Get("console").Call("log", args...)
 }
+func consoleError(args ...interface{}) {
+	js.Global().Get("console").Call("error", args...)
+}
 
 func main() {
 
 	chessWASM := map[string]interface{}{
 		"marco": (func(this js.Value, args []js.Value) interface{} {
-			return js.ValueOf("polo")
+			return "polo"
 		}),
 		"getAllValidMoves": (func(this js.Value, args []js.Value) interface{} {
+			returnValue := map[string][]string{}
 			if len(args) < 1 {
-				errorObj := js.Global().Get("Error").New("FEN string is required")
-				js.Global().Call("throw", errorObj)
-				return nil
+				returnValue = getAllValidMoves("")
+			} else {
+				fenString := args[0].String()
+				returnValue = getAllValidMoves(fenString)
 			}
-			fenString := args[0].String()
-			return getAllValidMoves(fenString)
+
+			// js wasm does not support map[string][]string directly, so we need to convert it
+			// to map[string]interface{} that js wasm can understand
+			jsCompatibleReturnValue := make(map[string]interface{}, len(returnValue))
+			for k, v := range returnValue {
+				slice := make([]interface{}, len(v))
+				for i, val := range v {
+					slice[i] = val
+				}
+				jsCompatibleReturnValue[k] = slice
+			}
+			return jsCompatibleReturnValue
 		}),
 	}
 
@@ -58,7 +75,7 @@ func main() {
 				defer func() {
 					if r := recover(); r != nil {
 						errorObj := js.Global().Get("Error").New("Panic occurred: " + r.(string))
-						js.Global().Call("throw", errorObj)
+						consoleError(errorObj)
 					}
 				}()
 				return fn(this, args)
