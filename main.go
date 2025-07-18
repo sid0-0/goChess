@@ -2,12 +2,9 @@ package main
 
 import (
 	"fmt"
-	"go/build"
 	"gochess/chessBoard"
 	"io/fs"
 	"net/http"
-	"os"
-	"os/exec"
 	"path/filepath"
 	"slices"
 	"strings"
@@ -102,25 +99,6 @@ func main() {
 			}
 		}
 	})
-
-	// auto populating static/wasm_exec.js if not present
-	if _, err := os.Stat("static/wasm_exec.js"); err != nil {
-		fmt.Println("wasm_exec.js not found in static directory, copying from GOROOT")
-
-		goRootPath := os.Getenv("GOROOT")
-		if goRootPath == "" {
-			goRootPath = build.Default.GOROOT
-		}
-
-		fmt.Println("Path: ", filepath.Join(goRootPath, "lib", "wasm", "wasm_exec.js"))
-		cmd := exec.Command("cp", filepath.Join(goRootPath, "lib", "wasm", "wasm_exec.js"), "static/wasm_exec.js")
-		if output, err := cmd.CombinedOutput(); err != nil {
-			fmt.Println("Failed to copy wasm_exec.js:", err, string(output))
-			fmt.Println("Executed command:", cmd.String())
-		}
-	}
-
-	r.Handle("/static/*", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
 	err = http.ListenAndServe(":8080", r)
 	if err != nil {
