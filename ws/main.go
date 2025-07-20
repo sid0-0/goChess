@@ -45,6 +45,7 @@ func NewHub() *Hub {
 				newHub.Clients[newClient.PoolID] = append(newHub.Clients[newClient.PoolID], newClient)
 				// spew.Println("Current clients in pool:", len(newHub.Clients[newClient.PoolID]))
 				// spew.Println("Clients in pool:", spew.Sdump(newHub.Clients[newClient.PoolID]))
+
 			case clientToRemove := <-newHub.Unregister:
 				spew.Println("Unregistering client:", clientToRemove.ID)
 				if _, ok := newHub.Clients[clientToRemove.PoolID]; !ok {
@@ -58,6 +59,11 @@ func NewHub() *Hub {
 						newHub.Clients[clientToRemove.PoolID] = append(newHub.Clients[clientToRemove.PoolID][:0], newHub.Clients[clientToRemove.PoolID][1:]...)
 						break
 					}
+				}
+				if len(newHub.Clients[clientToRemove.PoolID]) == 0 {
+					spew.Println("No clients left in pool, removing pool:", clientToRemove.PoolID)
+					delete(newHub.Clients, clientToRemove.PoolID)
+					return
 				}
 			}
 		}
