@@ -2,6 +2,7 @@ package internal
 
 import (
 	"gochess/chessBoard"
+	"gochess/internal/customMiddleware"
 	"html/template"
 	"net/http"
 	"time"
@@ -17,6 +18,8 @@ func setupRouter(allTemplates *template.Template, board *chessBoard.Board) *chi.
 	router.Use(middleware.RequestID)
 	router.Use(middleware.Logger)
 	router.Use(middleware.Timeout(30 * time.Second))
+
+	router.Use(customMiddleware.CookieHandler)
 
 	// Load all routes
 	loadRoutes(router, allTemplates, board)
