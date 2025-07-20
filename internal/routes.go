@@ -6,8 +6,11 @@ import (
 	"html/template"
 	"net/http"
 	"slices"
+	"time"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/go-chi/chi/v5"
+	"github.com/gorilla/websocket"
 )
 
 func loadRoutes(router *chi.Mux, allTemplates *template.Template, currentBoard *chessBoard.Board) {
@@ -82,4 +85,33 @@ func loadRoutes(router *chi.Mux, allTemplates *template.Template, currentBoard *
 			}
 		}
 	})
+
+	var upgrader = websocket.Upgrader{
+		CheckOrigin: func(r *http.Request) bool {
+			// Allow any origin for dev. Lock this down in production!
+			return true
+		},
+	}
+
+	router.Get("/ws/board", func(w http.ResponseWriter, r *http.Request) {
+		spew.Println("WebSocket connection requested")
+		conn, err := upgrader.Upgrade(w, r, nil)
+		if err != nil {
+			spew.Println("Upgrade error:", err)
+			return
+		}
+		defer conn.Close()
+
+		spew.Println("WebSocket connected")
+
+		for {
+			time.Sleep(1 * time.Second)
+			err := conn.WriteMessage(websocket.TextMessage, []byte("<div>Ping from server</div>"))
+			if err != nil {
+				spew.Println("Write error:", err)
+				break
+			}
+		}
+	})
+
 }

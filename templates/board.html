@@ -3,6 +3,7 @@
   .boardContainer {
     height: 100%;
     width: 100%;
+    aspect-ratio: 1;
     display: grid;
     grid-template-columns: repeat(8, 1fr);
     grid-template-rows: repeat(8, 1fr);
@@ -10,9 +11,10 @@
     color: red;
   }
 </style>
-<div class="boardContainer">
-  {{ range .board }} {{ range . }} {{template "Square" dict "data" .}} {{end}}
-  {{ end }}
+<div hx-ext="ws" ws-connect="/ws/board">
+  <div class="boardContainer">
+    {{ range .board }} {{ range . }} {{template "Square" dict "data" .}} {{end}}
+    {{ end }}
+  </div>
 </div>
-
 {{ end }}
