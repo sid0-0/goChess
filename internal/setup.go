@@ -2,7 +2,6 @@ package internal
 
 import (
 	"context"
-	"gochess/chessBoard"
 	"gochess/internal/customMiddleware"
 	"gochess/ws"
 	"html/template"
@@ -14,18 +13,22 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 )
 
-func setupRouter(allTemplates *template.Template, wsHub *ws.Hub, poolToBoardMap map[string]*chessBoard.Board) *chi.Mux {
+func setupRouter(allTemplates *template.Template, wsHub *ws.Hub) *chi.Mux {
 	router := chi.NewRouter()
 	router.Use(middleware.RequestID)
 	router.Use(middleware.Logger)
 	router.Use(middleware.Timeout(30 * time.Second))
 
 	router.Use(customMiddleware.CookieHandler)
+	router.Use(customMiddleware.PoolToBoardMapMiddleware)
+
 	// load context in requests
 	router.Use(func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			// Create a new context with the templates and board hubs
 			ctx := r.Context()
+
+			poolToBoardMap := r.Context().Value(customMiddleware.PoolToBoardMapContextKey).(customMiddleware.PoolToBoardMap)
 
 			sessionId, _ := r.Cookie(customMiddleware.CookieKey)
 
@@ -33,14 +36,14 @@ func setupRouter(allTemplates *template.Template, wsHub *ws.Hub, poolToBoardMap 
 
 			if ok {
 				ctx = context.WithValue(ctx, cilentContextDataKey, &ClientContextData{
-					Board: poolToBoardMap[clientPool.ID],
-					Data:  client,
-					Pool:  clientPool,
+					Board:         poolToBoardMap[clientPool.ID],
+					WebSocketData: client,
+					Pool:          clientPool,
 				})
 			} else {
 				ctx = context.WithValue(ctx, cilentContextDataKey, &ClientContextData{
 					Board: nil,
-					Data: &ws.Client{
+					WebSocketData: &ws.Client{
 						ID: sessionId.Value,
 					},
 					Pool: nil,
@@ -55,7 +58,7 @@ func setupRouter(allTemplates *template.Template, wsHub *ws.Hub, poolToBoardMap 
 	})
 
 	// Load all routes
-	loadRoutes(router)
+	loadRoutes(router, wsHub)
 
 	return router
 }
@@ -72,10 +75,8 @@ func RunServer() {
 	// Create a new chess board for local dev
 	wsHub := ws.NewHub()
 
-	poolToBoardMap := make(map[string]*chessBoard.Board)
-
 	// Initialize the router
-	router := setupRouter(allTemplates, wsHub, poolToBoardMap)
+	router := setupRouter(allTemplates, wsHub)
 
 	// Start the server
 	err = http.ListenAndServe(":8080", router)

@@ -3,6 +3,7 @@ package internal
 import (
 	"fmt"
 	"gochess/chessBoard"
+	"gochess/ws"
 	"html/template"
 	"net/http"
 	"slices"
@@ -13,7 +14,7 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-func loadRoutes(router *chi.Mux) {
+func loadRoutes(router *chi.Mux, wsHub *ws.Hub) {
 
 	// test route
 	router.Get("/marco", func(w http.ResponseWriter, r *http.Request) {
@@ -22,11 +23,36 @@ func loadRoutes(router *chi.Mux) {
 	})
 
 	router.Get("/", func(w http.ResponseWriter, r *http.Request) {
-
 		ctx := r.Context()
 		templates := ctx.Value(templatesContextKey).(*template.Template)
 		clientContextData := ctx.Value(cilentContextDataKey).(*ClientContextData)
 		currentBoard := clientContextData.Board
+		w.Header().Set("Content-type", "text/html")
+
+		var err error
+		if currentBoard == nil {
+			err = templates.ExecuteTemplate(w, "Main", nil)
+		} else {
+			err = templates.ExecuteTemplate(w, "Main", map[string]any{"board": currentBoard.GetRepresentationalSquares()})
+		}
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(err.Error()))
+		}
+	})
+
+	router.Get("/start_new_game", func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		templates := ctx.Value(templatesContextKey).(*template.Template)
+		clientContextData := ctx.Value(cilentContextDataKey).(*ClientContextData)
+		currentBoard := clientContextData.Board
+
+		pool := wsHub.NewPool()
+		newBoard := chessBoard.New()
+		clientContextData.Board = newBoard
+		clientContextData.Pool = pool
+		pool.Register <- clientContextData.WebSocketData
+
 		w.Header().Set("Content-type", "text/html")
 
 		var err error

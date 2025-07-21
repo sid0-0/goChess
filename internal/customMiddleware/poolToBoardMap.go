@@ -17,7 +17,7 @@ func PoolToBoardMapMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Create a new context with the poolToBoardMap
 		ctx := r.Context()
-		ctx = context.WithValue(ctx, PoolToBoardMapContextKey, &poolToBoardMap)
+		ctx = context.WithValue(ctx, PoolToBoardMapContextKey, poolToBoardMap)
 		// Call the next handler with the new context
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
