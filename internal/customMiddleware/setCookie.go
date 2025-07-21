@@ -10,11 +10,11 @@ import (
 type contextKey string
 
 const SessionKey contextKey = "session"
+const CookieKey string = "session"
 
 func CookieHandler(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
-		cookieKey := "session"
-		_, err := r.Cookie(cookieKey)
+		_, err := r.Cookie(CookieKey)
 		if err != nil {
 			if err != http.ErrNoCookie {
 				http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -22,7 +22,7 @@ func CookieHandler(next http.Handler) http.Handler {
 			}
 			// Create a new newCookie if it doesn't exist
 			newCookie := &http.Cookie{
-				Name:  cookieKey,
+				Name:  CookieKey,
 				Value: uuid.NewString(),
 			}
 			http.SetCookie(w, newCookie)

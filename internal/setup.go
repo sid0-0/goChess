@@ -26,9 +26,10 @@ func setupRouter(allTemplates *template.Template, wsHub *ws.Hub, poolToBoardMap 
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			// Create a new context with the templates and board hubs
 			ctx := r.Context()
-			sessionId := ctx.Value(customMiddleware.SessionKey)
 
-			ok, client, clientPool := wsHub.IsClientInHub(sessionId.(string))
+			sessionId, _ := r.Cookie(customMiddleware.CookieKey)
+
+			ok, client, clientPool := wsHub.IsClientInHub(sessionId.Value)
 
 			if ok {
 				ctx = context.WithValue(ctx, cilentContextDataKey, &ClientContextData{
