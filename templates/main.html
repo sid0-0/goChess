@@ -99,11 +99,8 @@
 <body class="m-0">
   <div class="h-vh w-vw bg-emerald-700">
     {{ template "Header" . }}
-    {{ if .board }}
     {{ template "Board" .}}
-    {{ else }}
     {{ template "Home". }}
-    {{ end }}
   </div>
 </body>
 
