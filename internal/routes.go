@@ -57,7 +57,12 @@ func loadRoutes(router *chi.Mux, wsHub *ws.Hub) {
 
 		w.Header().Set("Content-type", "text/html")
 
-		err := templates.ExecuteTemplate(w, "Main", map[string]any{"board": newBoard.GetRepresentationalSquares()})
+		err := templates.ExecuteTemplate(w, "Board", map[string]any{"board": newBoard.GetRepresentationalSquares()})
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(err.Error()))
+		}
+		err = templates.ExecuteTemplate(w, "HomeActions", map[string]any{"hideButtons": true})
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))

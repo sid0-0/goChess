@@ -1,8 +1,7 @@
 {{ define "Board" }}
 <style>
-  #boardContainer {
-    height: fit-content;
-    width: fit-content;
+  .board {
+    height: 500px;
     aspect-ratio: 1;
     display: grid;
     grid-template-columns: repeat(8, 1fr);
@@ -11,12 +10,14 @@
     color: red;
   }
 </style>
-<div hx-ext="ws" ws-connect="/ws/board">
-  <div id="boardContainer" hx-swap-oob="true">
+<div id="boardContainer" hx-swap="innerHTML" hx-swap-oob="true" class="flex items-center justify-center">
+  {{ if .board }}
+  <div hx-ext="ws" ws-connect="/ws/board" class="board">
     {{if .board }}
     {{ range .board }} {{ range . }} {{template "Square" dict "data" .}} {{end}}
     {{ end }}
     {{ end }}
   </div>
+  {{ end }}
 </div>
 {{ end }}
