@@ -28,13 +28,13 @@ func loadRoutes(router *chi.Mux) {
 		clientContextData := ctx.Value(cilentContextDataKey).(*ClientContextData)
 		currentBoard := clientContextData.Board
 		w.Header().Set("Content-type", "text/html")
-		if currentBoard == nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte("No board found for this client."))
-			return
-		}
 
-		err := templates.ExecuteTemplate(w, "Main", map[string]any{"board": currentBoard.GetRepresentationalSquares()})
+		var err error
+		if currentBoard == nil {
+			err = templates.ExecuteTemplate(w, "Home", nil)
+		} else {
+			err = templates.ExecuteTemplate(w, "Main", map[string]any{"board": currentBoard.GetRepresentationalSquares()})
+		}
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))
