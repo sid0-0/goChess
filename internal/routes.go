@@ -13,7 +13,7 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-func loadRoutes(router *chi.Mux, allTemplates *template.Template, currentBoard *chessBoard.Board) {
+func loadRoutes(router *chi.Mux) {
 
 	// test route
 	router.Get("/marco", func(w http.ResponseWriter, r *http.Request) {
@@ -22,9 +22,14 @@ func loadRoutes(router *chi.Mux, allTemplates *template.Template, currentBoard *
 	})
 
 	router.Get("/", func(w http.ResponseWriter, r *http.Request) {
+
+		ctx := r.Context()
+		templates := ctx.Value(templatesContextKey).(*template.Template)
+		clientContextData := ctx.Value(cilentContextDataKey).(*ClientContextData)
+		currentBoard := clientContextData.Board
 		w.Header().Set("Content-type", "text/html")
 
-		err := allTemplates.ExecuteTemplate(w, "Main", map[string]any{"board": currentBoard.GetRepresentationalSquares()})
+		err := templates.ExecuteTemplate(w, "Main", map[string]any{"board": currentBoard.GetRepresentationalSquares()})
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))
@@ -34,6 +39,10 @@ func loadRoutes(router *chi.Mux, allTemplates *template.Template, currentBoard *
 	var highlighted *chessBoard.Square
 
 	router.Post("/move/{square}", func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		templates := ctx.Value(templatesContextKey).(*template.Template)
+		clientContextData := ctx.Value(cilentContextDataKey).(*ClientContextData)
+		currentBoard := clientContextData.Board
 		squareId := chi.URLParam(r, "square")
 		fmt.Println(r.Body)
 		defer r.Body.Close()
@@ -59,10 +68,14 @@ func loadRoutes(router *chi.Mux, allTemplates *template.Template, currentBoard *
 		// 	return
 		// }
 
-		allTemplates.ExecuteTemplate(w, "Main", map[string]any{"board": currentBoard.GetRepresentationalSquares()})
+		templates.ExecuteTemplate(w, "Main", map[string]any{"board": currentBoard.GetRepresentationalSquares()})
 	})
 
 	router.Post("/highlight/{square}", func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		templates := ctx.Value(templatesContextKey).(*template.Template)
+		clientContextData := ctx.Value(cilentContextDataKey).(*ClientContextData)
+		currentBoard := clientContextData.Board
 		squareId := chi.URLParam(r, "square")
 		fmt.Println(r.Body)
 		defer r.Body.Close()
@@ -81,7 +94,7 @@ func loadRoutes(router *chi.Mux, allTemplates *template.Template, currentBoard *
 		// hx-include will allow replacing only highlighted and to-be-highlighted squares but I couldn't get it working
 		for i := range currentBoard.Squares {
 			for j := range currentBoard.Squares[i] {
-				allTemplates.ExecuteTemplate(w, "Square", map[string]any{"data": currentBoard.Squares[i][j], "highlight": slices.Contains(square.LegalMoves, &currentBoard.Squares[i][j])})
+				templates.ExecuteTemplate(w, "Square", map[string]any{"data": currentBoard.Squares[i][j], "highlight": slices.Contains(square.LegalMoves, &currentBoard.Squares[i][j])})
 			}
 		}
 	})

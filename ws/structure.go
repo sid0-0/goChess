@@ -10,10 +10,14 @@ type Client struct {
 	PoolID     string          // Identifier for the board the client is connected to
 }
 
+type Pool struct {
+	ID         string       // Unique identifier for the pool
+	Clients    []*Client    // Map of clients in the pool
+	Register   chan *Client // Channel to register new clients
+	Unregister chan *Client // Channel to unregister clients
+}
+
 type Hub struct {
-	HubId      string               // Unique identifier for the hub
-	Clients    map[string][]*Client // Map of connected clients
-	Register   chan *Client         // Channel to register new clients
-	Unregister chan *Client         // Channel to unregister clients
-	Broadcast  chan []byte          // Channel to broadcast messages to all clients
+	HubId string  // Unique identifier for the hub
+	Pools []*Pool // Map of pools, each containing clients
 }
