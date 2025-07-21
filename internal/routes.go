@@ -25,7 +25,7 @@ func loadRoutes(router *chi.Mux, wsHub *ws.Hub) {
 	router.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		templates := ctx.Value(templatesContextKey).(*template.Template)
-		clientContextData := ctx.Value(cilentContextDataKey).(*ClientContextData)
+		clientContextData := ctx.Value(clientContextDataKey).(*ClientContextData)
 		currentBoard := clientContextData.Board
 		w.Header().Set("Content-type", "text/html")
 
@@ -44,7 +44,7 @@ func loadRoutes(router *chi.Mux, wsHub *ws.Hub) {
 	router.Get("/start_new_game", func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		templates := ctx.Value(templatesContextKey).(*template.Template)
-		clientContextData := ctx.Value(cilentContextDataKey).(*ClientContextData)
+		clientContextData := ctx.Value(clientContextDataKey).(*ClientContextData)
 		currentBoard := clientContextData.Board
 
 		pool := wsHub.NewPool()
@@ -72,7 +72,7 @@ func loadRoutes(router *chi.Mux, wsHub *ws.Hub) {
 	router.Post("/move/{square}", func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		templates := ctx.Value(templatesContextKey).(*template.Template)
-		clientContextData := ctx.Value(cilentContextDataKey).(*ClientContextData)
+		clientContextData := ctx.Value(clientContextDataKey).(*ClientContextData)
 		currentBoard := clientContextData.Board
 		squareId := chi.URLParam(r, "square")
 		fmt.Println(r.Body)
@@ -105,7 +105,7 @@ func loadRoutes(router *chi.Mux, wsHub *ws.Hub) {
 	router.Post("/highlight/{square}", func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		templates := ctx.Value(templatesContextKey).(*template.Template)
-		clientContextData := ctx.Value(cilentContextDataKey).(*ClientContextData)
+		clientContextData := ctx.Value(clientContextDataKey).(*ClientContextData)
 		currentBoard := clientContextData.Board
 		squareId := chi.URLParam(r, "square")
 		fmt.Println(r.Body)
