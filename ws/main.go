@@ -16,7 +16,7 @@ func (hub *Hub) IsClientInHub(sessionIdToCheck string) (bool, *Client, *Pool) {
 	return false, nil, nil
 }
 
-func (hub *Hub) NewPool() string {
+func (hub *Hub) NewPool() *Pool {
 	newPoolId := uuid.NewString()
 	newPool := &Pool{
 		ID:         newPoolId,
@@ -39,6 +39,7 @@ func (hub *Hub) NewPool() string {
 				spew.Println("Registering new client:", newClient.ID)
 				// Add the new client to the pool
 				newPool.Clients = append(newPool.Clients, newClient)
+				newClient.PoolID = newPool.ID
 
 			case clientToRemove := <-newPool.Unregister:
 				spew.Println("Unregistering client:", clientToRemove.ID)
@@ -66,7 +67,7 @@ func (hub *Hub) NewPool() string {
 		}
 	}()
 	hub.Pools = append(hub.Pools, newPool)
-	return newPoolId
+	return newPool
 }
 
 func (pool *Pool) AddClient(client *Client) {
