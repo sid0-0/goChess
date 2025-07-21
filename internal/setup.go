@@ -37,6 +37,15 @@ func setupRouter(allTemplates *template.Template, wsHub *ws.Hub, poolToBoardMap 
 					Data:  client,
 					Pool:  clientPool,
 				})
+			} else {
+				ctx = context.WithValue(ctx, cilentContextDataKey, &ClientContextData{
+					Board: nil,
+					Data: &ws.Client{
+						ID: sessionId.Value,
+					},
+					Pool: nil,
+				})
+
 			}
 
 			ctx = context.WithValue(ctx, templatesContextKey, allTemplates)
