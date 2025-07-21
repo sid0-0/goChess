@@ -1,6 +1,6 @@
 {{ define "HomeActions"}}
 <div class="flex items-center justify-center w-full m-t-24" id="homeButtonsContainer" hx-swap-oob="true">
-  {{ if not .hideButtons }}
+  {{ if not .board }}
   <button
     class="p-y-8 p-x-12 bg-emerald-200 hover:bg-emerald-300 rounded-3xl cursor-pointer text-slate-900 text-xl shadow-lg border-0"
     hx-get="/start_new_game">Start a new game</button>
