@@ -3,6 +3,7 @@ package internal
 import (
 	"fmt"
 	"gochess/chessBoard"
+	"gochess/internal/customMiddleware"
 	"gochess/ws"
 	"html/template"
 	"net/http"
@@ -45,22 +46,18 @@ func loadRoutes(router *chi.Mux, wsHub *ws.Hub) {
 		ctx := r.Context()
 		templates := ctx.Value(templatesContextKey).(*template.Template)
 		clientContextData := ctx.Value(clientContextDataKey).(*ClientContextData)
-		currentBoard := clientContextData.Board
+		poolToBoardMap := ctx.Value(customMiddleware.PoolToBoardMapContextKey).(customMiddleware.PoolToBoardMap)
 
 		pool := wsHub.NewPool()
 		newBoard := chessBoard.New()
-		clientContextData.Board = newBoard
-		clientContextData.Pool = pool
+
+		poolToBoardMap[pool.ID] = newBoard
+
 		pool.Register <- clientContextData.WebSocketData
 
 		w.Header().Set("Content-type", "text/html")
 
-		var err error
-		if currentBoard == nil {
-			err = templates.ExecuteTemplate(w, "Main", nil)
-		} else {
-			err = templates.ExecuteTemplate(w, "Main", map[string]any{"board": currentBoard.GetRepresentationalSquares()})
-		}
+		err := templates.ExecuteTemplate(w, "Main", map[string]any{"board": newBoard.GetRepresentationalSquares()})
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))
