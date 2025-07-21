@@ -2,50 +2,48 @@
 
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <link
-      rel="icon"
-      type="image/gif"
-      href="https://upload.wikimedia.org/wikipedia/commons/4/45/Chess_plt45.svg"
-    />
-    <script src="https://cdn.jsdelivr.net/npm/@unocss/runtime"></script>
-    <script
-      src="https://unpkg.com/htmx.org@1.9.10"
-      integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC"
-      crossorigin="anonymous"
-    ></script>
-    <script src="https://unpkg.com/htmx.org/dist/ext/ws.js"></script>
-    <!-- <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.6/dist/htmx.min.js" integrity="sha384-HGfztofotfshcF7+8n44JQL2oJmowVChPTg48S+jvZoztPfvwD79OC/LTtG6dMp+" crossorigin="anonymous"></script>
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+  <link rel="icon" type="image/gif" href="https://upload.wikimedia.org/wikipedia/commons/4/45/Chess_plt45.svg" />
+  <script src="https://cdn.jsdelivr.net/npm/@unocss/runtime"></script>
+  <script src="https://unpkg.com/htmx.org@1.9.10"
+    integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC"
+    crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/htmx.org/dist/ext/ws.js"></script>
+  <!-- <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.6/dist/htmx.min.js" integrity="sha384-HGfztofotfshcF7+8n44JQL2oJmowVChPTg48S+jvZoztPfvwD79OC/LTtG6dMp+" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/htmx-ext-ws@2.0.2" integrity="sha384-vuKxTKv5TX/b3lLzDKP2U363sOAoRo5wSvzzc3LJsbaQRSBSS+3rKKHcOx5J8doU" crossorigin="anonymous"></script> -->
-    <head>
+
+  <head>
     <title>Chess in GO</title>
 
     <style>
-      .mainContainer {
-        height: 70vh;
-        aspect-ratio: 1;
-      }
       .piece {
         filter: drop-shadow(3px 3px 2px rgb(0 0 0 / 0.4));
       }
+
       .piece_P0 {
         content: url(https://upload.wikimedia.org/wikipedia/commons/4/45/Chess_plt45.svg);
       }
+
       .piece_K0 {
         content: url(https://upload.wikimedia.org/wikipedia/commons/4/42/Chess_klt45.svg);
       }
+
       .piece_Q0 {
         content: url(https://upload.wikimedia.org/wikipedia/commons/1/15/Chess_qlt45.svg);
       }
+
       .piece_R0 {
         content: url(https://upload.wikimedia.org/wikipedia/commons/7/72/Chess_rlt45.svg);
       }
+
       .piece_B0 {
         content: url(https://upload.wikimedia.org/wikipedia/commons/b/b1/Chess_blt45.svg);
       }
+
       .piece_N0 {
         content: url(https://upload.wikimedia.org/wikipedia/commons/7/70/Chess_nlt45.svg);
       }
@@ -53,18 +51,23 @@
       .piece_P1 {
         content: url(https://upload.wikimedia.org/wikipedia/commons/c/c7/Chess_pdt45.svg);
       }
+
       .piece_K1 {
         content: url(https://upload.wikimedia.org/wikipedia/commons/f/f0/Chess_kdt45.svg);
       }
+
       .piece_Q1 {
         content: url(https://upload.wikimedia.org/wikipedia/commons/4/47/Chess_qdt45.svg);
       }
+
       .piece_R1 {
         content: url(https://upload.wikimedia.org/wikipedia/commons/f/ff/Chess_rdt45.svg);
       }
+
       .piece_B1 {
         content: url(https://upload.wikimedia.org/wikipedia/commons/9/98/Chess_bdt45.svg);
       }
+
       .piece_N1 {
         content: url(https://upload.wikimedia.org/wikipedia/commons/e/ef/Chess_ndt45.svg);
       }
@@ -75,16 +78,16 @@
         z-index: 2;
         opacity: 0.5;
       }
+
       .legalMove_attacking {
         height: 100%;
-        background: repeating-radial-gradient(
-          circle,
-          rgba(0, 0, 0, 0) 0,
-          rgba(0, 0, 0, 0) 75%,
-          rgba(0, 90, 0, 1) 75%,
-          rgba(0, 90, 0, 1) 100%
-        );
+        background: repeating-radial-gradient(circle,
+            rgba(0, 0, 0, 0) 0,
+            rgba(0, 0, 0, 0) 75%,
+            rgba(0, 90, 0, 1) 75%,
+            rgba(0, 90, 0, 1) 100%);
       }
+
       .legalMove_nonAttacking {
         height: 40%;
         background-color: green;
@@ -92,9 +95,18 @@
       }
     </style>
   </head>
-  <body>
-    <div class="mainContainer">{{template "Board" .}}</div>
-  </body>
+
+<body class="m-0">
+  <div class="h-vh w-vw bg-emerald-700">
+    {{ template "Header" . }}
+    {{ if .board }}
+    {{ template "Board" .}}
+    {{ else }}
+    {{ template "Home". }}
+    {{ end }}
+  </div>
+</body>
+
 </html>
 
 {{ end }}

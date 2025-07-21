@@ -31,7 +31,7 @@ func loadRoutes(router *chi.Mux) {
 
 		var err error
 		if currentBoard == nil {
-			err = templates.ExecuteTemplate(w, "Home", nil)
+			err = templates.ExecuteTemplate(w, "Main", nil)
 		} else {
 			err = templates.ExecuteTemplate(w, "Main", map[string]any{"board": currentBoard.GetRepresentationalSquares()})
 		}
