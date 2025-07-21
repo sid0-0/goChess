@@ -58,7 +58,7 @@ func loadRoutes(router *chi.Mux, wsHub *ws.Hub) {
 		w.Header().Set("Content-type", "text/html")
 
 		templateArgs := map[string]any{"board": newBoard.GetRepresentationalSquares()}
-		err := templates.ExecuteTemplate(w, "Board", templateArgs)
+		err := templates.ExecuteTemplate(w, "BoardContainer", templateArgs)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))
@@ -102,7 +102,7 @@ func loadRoutes(router *chi.Mux, wsHub *ws.Hub) {
 		// 	return
 		// }
 
-		templates.ExecuteTemplate(w, "Main", map[string]any{"board": currentBoard.GetRepresentationalSquares()})
+		templates.ExecuteTemplate(w, "Board", map[string]any{"board": currentBoard.GetRepresentationalSquares()})
 	})
 
 	router.Post("/highlight/{square}", func(w http.ResponseWriter, r *http.Request) {

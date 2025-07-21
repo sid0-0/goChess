@@ -1,4 +1,11 @@
 {{ define "Board" }}
+<div id="board" class="board" hx-swap-oob="true">
+  {{ range .board }} {{ range . }} {{template "Square" dict "data" .}} {{end}}
+  {{ end }}
+</div>
+{{ end }}
+
+{{ define "BoardContainer" }}
 <style>
   .board {
     height: 500px;
@@ -10,13 +17,10 @@
     color: red;
   }
 </style>
-<div id="boardContainer" hx-swap="innerHTML" hx-swap-oob="true" class="flex items-center justify-center">
+<div id="boardContainer" class="flex items-center justify-center" hx-swap-oob="true">
   {{ if .board }}
-  <div hx-ext="ws" ws-connect="/ws/board" class="board">
-    {{if .board }}
-    {{ range .board }} {{ range . }} {{template "Square" dict "data" .}} {{end}}
-    {{ end }}
-    {{ end }}
+  <div hx-ext="ws" ws-connect="/ws/board">
+    {{ template "Board" . }}
   </div>
   {{ end }}
 </div>
