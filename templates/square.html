@@ -1,7 +1,7 @@
 {{ define "Square" }}
 <div id="{{.data.File}}{{.data.Rank}}"
-  class="bg-{{if .data.Color}}yellow-700{{else}}yellow-50{{end}} flex items-center grid-justify-center relative"
-  hx-swap-oob="true" {{if not .data.Piece}} name="action" value="ping" ws-send="click" hx-trigger="click" {{end}}>
+  class="bg-{{if .data.Color}}yellow-700{{else}}yellow-50{{end}} flex items-center grid-justify-center relative" {{ if
+  not .data.Piece }} hx-post="/move/{{.data.File}}{{.data.Rank}}" hx-trigger="click" {{ end }} hx-swap-oob="true">
   {{if .data.Piece}}
   <img class="piece piece_{{.data.Piece.PieceType}}{{.data.Piece.Color}} h-95% cursor-grab"
     hx-post="/highlight/{{.data.File}}{{.data.Rank}}" hx-include="img" />
