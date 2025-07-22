@@ -15,7 +15,7 @@ func LoadAllTemplates(location string) (*template.Template, error) {
 	spew.Println("Loading templates from:", location)
 	allTemplates = template.New("").Funcs(sprig.FuncMap())
 	err := filepath.WalkDir(location, func(path string, _ fs.DirEntry, _ error) error {
-		if strings.HasSuffix(path, ".html") {
+		if strings.HasSuffix(path, ".gohtml") {
 			_, err := allTemplates.ParseFiles(path)
 			if err == nil {
 			}
