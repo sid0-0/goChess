@@ -36,17 +36,15 @@ func setupRouter(allTemplates *template.Template, wsHub *ws.Hub) *chi.Mux {
 
 			if ok {
 				ctx = context.WithValue(ctx, clientContextDataKey, &ClientContextData{
-					Board:         poolToBoardMap[clientPool.ID],
-					WebSocketData: client,
-					Pool:          clientPool,
+					Board:           poolToBoardMap[clientPool.ID],
+					WebsocketClient: client,
+					Pool:            clientPool,
 				})
 			} else {
 				ctx = context.WithValue(ctx, clientContextDataKey, &ClientContextData{
-					Board: nil,
-					WebSocketData: &ws.Client{
-						ID: sessionId.Value,
-					},
-					Pool: nil,
+					Board:           nil,
+					WebsocketClient: ws.NewClient(sessionId.Value),
+					Pool:            nil,
 				})
 
 			}

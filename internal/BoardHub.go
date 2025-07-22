@@ -6,7 +6,7 @@ import (
 )
 
 type ClientContextData struct {
-	WebSocketData *ws.Client
-	Board         *chessBoard.Board
-	Pool          *ws.Pool
+	WebsocketClient *ws.Client
+	Board           *chessBoard.Board
+	Pool            *ws.Pool
 }

@@ -53,7 +53,7 @@ func loadRoutes(router *chi.Mux, wsHub *ws.Hub) {
 
 		poolToBoardMap[pool.ID] = newBoard
 
-		pool.Register <- clientContextData.WebSocketData
+		pool.Register <- clientContextData.WebsocketClient
 
 		w.Header().Set("Content-type", "text/html")
 
@@ -147,17 +147,21 @@ func loadRoutes(router *chi.Mux, wsHub *ws.Hub) {
 			spew.Println("Upgrade error:", err)
 			return
 		}
-		defer conn.Close()
+
+		clientContextData := r.Context().Value(clientContextDataKey).(*ClientContextData)
+		clientContextData.WebsocketClient.StartHandlingMessages(conn)
 
 		spew.Println("WebSocket connected")
 
-		for {
-			time.Sleep(1 * time.Second)
-			err := conn.WriteMessage(websocket.TextMessage, []byte("<div>Ping from server</div>"))
-			if err != nil {
-				spew.Println("Write error:", err)
-				break
+		go func() {
+			for msg := range clientContextData.WebsocketClient.Receive {
+				spew.Println("Received message:", string(msg))
 			}
+		}()
+
+		for {
+			clientContextData.WebsocketClient.Send <- []byte("Hello from the server!")
+			time.Sleep(1 * time.Second)
 		}
 	})
 

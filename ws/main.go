@@ -3,6 +3,7 @@ package ws
 import (
 	"github.com/davecgh/go-spew/spew"
 	"github.com/google/uuid"
+	"github.com/gorilla/websocket"
 )
 
 func (hub *Hub) IsClientInHub(sessionIdToCheck string) (bool, *Client, *Pool) {
@@ -82,4 +83,38 @@ func NewHub() *Hub {
 	}
 
 	return &newHub
+}
+
+func NewClient(id string) *Client {
+	newClient := Client{
+		ID:         id,
+		ClientType: "default",
+	}
+
+	return &newClient
+}
+
+func (client *Client) StartHandlingMessages(conn *websocket.Conn) {
+	client.Conn = conn
+	client.Receive = make(chan []byte)
+	client.Send = make(chan []byte)
+
+	go func() {
+		for msg := range client.Send {
+			if client.Conn == nil {
+				continue
+			}
+			if err := client.Conn.WriteMessage(1, msg); err != nil {
+				spew.Println("Error sending message:", err)
+			}
+		}
+	}()
+
+	go func() {
+		_, p, err := conn.ReadMessage()
+		if err != nil {
+			return
+		}
+		client.Receive <- p
+	}()
 }
