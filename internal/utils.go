@@ -1,6 +1,8 @@
 package internal
 
 import (
+	"encoding/json"
+	"gochess/chessBoard"
 	"html/template"
 	"io/fs"
 	"path/filepath"
@@ -27,4 +29,29 @@ func LoadAllTemplates(location string) (*template.Template, error) {
 		return nil, err
 	}
 	return allTemplates, nil
+}
+
+func GetLoadLegalMovesJson(board *chessBoard.Board) string {
+	if board != nil {
+		allLegalMoves := map[string][]string{}
+		// collect all legal moves in an object
+		for _, row := range board.Squares {
+			for _, square := range row {
+				squareNotation := square.File + square.Rank
+				legalMovesForSquare := []string{}
+				for _, square := range square.LegalMoves {
+					legalMovesForSquare = append(legalMovesForSquare, square.File+square.Rank)
+				}
+				allLegalMoves[squareNotation] = legalMovesForSquare
+			}
+		}
+		dataMap := map[string]interface{}{
+			"loadLegalMoves": allLegalMoves,
+		}
+		dataMapJson, err := json.Marshal(dataMap)
+		if err == nil {
+			return string(dataMapJson)
+		}
+	}
+	return ""
 }

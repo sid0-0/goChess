@@ -17,6 +17,11 @@
     color: red;
   }
 </style>
+<script>
+  window.addEventListener("loadLegalMoves", (...rest) => {
+    console.log('legal moves received: ', rest)
+  })
+</script>
 <div id="boardContainer" class="flex items-center justify-center" hx-swap-oob="true">
   {{ if .board }}
   <div hx-ext="ws" ws-connect="/ws/board">

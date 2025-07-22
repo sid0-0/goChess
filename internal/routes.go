@@ -34,6 +34,7 @@ func loadRoutes(router *chi.Mux, wsHub *ws.Hub) {
 		if currentBoard == nil {
 			err = templates.ExecuteTemplate(w, "Main", nil)
 		} else {
+			w.Header().Set("HX-Trigger", GetLoadLegalMovesJson(currentBoard))
 			err = templates.ExecuteTemplate(w, "Main", map[string]any{"board": currentBoard.GetRepresentationalSquares()})
 		}
 		if err != nil {
@@ -58,6 +59,7 @@ func loadRoutes(router *chi.Mux, wsHub *ws.Hub) {
 		w.Header().Set("Content-type", "text/html")
 
 		templateArgs := map[string]any{"board": newBoard.GetRepresentationalSquares()}
+		w.Header().Set("HX-Trigger", GetLoadLegalMovesJson(newBoard))
 		err := templates.ExecuteTemplate(w, "BoardContainer", templateArgs)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
@@ -102,6 +104,7 @@ func loadRoutes(router *chi.Mux, wsHub *ws.Hub) {
 		// 	return
 		// }
 
+		w.Header().Set("HX-Trigger", GetLoadLegalMovesJson(currentBoard))
 		templates.ExecuteTemplate(w, "Board", map[string]any{"board": currentBoard.GetRepresentationalSquares()})
 	})
 
