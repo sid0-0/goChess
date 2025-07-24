@@ -31,7 +31,7 @@ func LoadAllTemplates(location string) (*template.Template, error) {
 	return allTemplates, nil
 }
 
-func GetLoadLegalMovesJson(board *chessBoard.Board) string {
+func GetLoadLegalMovesJson(board *chessBoard.Board) template.JS {
 	if board != nil {
 		allLegalMoves := map[string][]string{}
 		// collect all legal moves in an object
@@ -45,13 +45,11 @@ func GetLoadLegalMovesJson(board *chessBoard.Board) string {
 				allLegalMoves[squareNotation] = legalMovesForSquare
 			}
 		}
-		dataMap := map[string]interface{}{
-			"loadLegalMoves": allLegalMoves,
-		}
-		dataMapJson, err := json.Marshal(dataMap)
+		dataMapJson, err := json.Marshal(allLegalMoves)
+
 		if err == nil {
-			return string(dataMapJson)
+			return template.JS(dataMapJson)
 		}
 	}
-	return ""
+	return template.JS("")
 }

@@ -7,7 +7,6 @@ import (
 	"gochess/ws"
 	"html/template"
 	"net/http"
-	"slices"
 	"time"
 
 	"github.com/davecgh/go-spew/spew"
@@ -34,8 +33,11 @@ func loadRoutes(router *chi.Mux, wsHub *ws.Hub) {
 		if currentBoard == nil {
 			err = templates.ExecuteTemplate(w, "Main", nil)
 		} else {
-			w.Header().Set("HX-Trigger", GetLoadLegalMovesJson(currentBoard))
-			err = templates.ExecuteTemplate(w, "Main", map[string]any{"board": currentBoard.GetRepresentationalSquares()})
+			legalMoves := GetLoadLegalMovesJson(currentBoard)
+			err = templates.ExecuteTemplate(w, "Main", map[string]any{
+				"board":      currentBoard.GetRepresentationalSquares(),
+				"legalMoves": legalMoves,
+			})
 		}
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
@@ -58,8 +60,11 @@ func loadRoutes(router *chi.Mux, wsHub *ws.Hub) {
 
 		w.Header().Set("Content-type", "text/html")
 
-		templateArgs := map[string]any{"board": newBoard.GetRepresentationalSquares()}
-		w.Header().Set("HX-Trigger", GetLoadLegalMovesJson(newBoard))
+		legalMoves := GetLoadLegalMovesJson(newBoard)
+		templateArgs := map[string]any{
+			"board":      newBoard.GetRepresentationalSquares(),
+			"legalMoves": legalMoves,
+		}
 		err := templates.ExecuteTemplate(w, "BoardContainer", templateArgs)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
@@ -104,36 +109,12 @@ func loadRoutes(router *chi.Mux, wsHub *ws.Hub) {
 		// 	return
 		// }
 
-		w.Header().Set("HX-Trigger", GetLoadLegalMovesJson(currentBoard))
-		templates.ExecuteTemplate(w, "Board", map[string]any{"board": currentBoard.GetRepresentationalSquares()})
-	})
-
-	router.Post("/highlight/{square}", func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
-		templates := ctx.Value(templatesContextKey).(*template.Template)
-		clientContextData := ctx.Value(clientContextDataKey).(*ClientContextData)
-		currentBoard := clientContextData.Board
-		squareId := chi.URLParam(r, "square")
-		fmt.Println(r.Body)
-		defer r.Body.Close()
-		if len(squareId) != 2 {
-			w.WriteHeader(http.StatusInternalServerError)
-			return
+		legalMoves := GetLoadLegalMovesJson(currentBoard)
+		templateArgs := map[string]any{
+			"board":      currentBoard.GetRepresentationalSquares(),
+			"legalMoves": legalMoves,
 		}
-		ri, ci := int(squareId[1]-'1'), int(squareId[0]-'a')
-		square := currentBoard.GetSquare(ri, ci)
-
-		if square == nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-		highlighted = square
-		// hx-include will allow replacing only highlighted and to-be-highlighted squares but I couldn't get it working
-		for i := range currentBoard.Squares {
-			for j := range currentBoard.Squares[i] {
-				templates.ExecuteTemplate(w, "Square", map[string]any{"data": currentBoard.Squares[i][j], "highlight": slices.Contains(square.LegalMoves, &currentBoard.Squares[i][j])})
-			}
-		}
+		templates.ExecuteTemplate(w, "Board", templateArgs)
 	})
 
 	var upgrader = websocket.Upgrader{

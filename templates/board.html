@@ -1,4 +1,5 @@
 {{ define "Board" }}
+{{ template "LegalMoves" .}}
 <div id="board" class="board" hx-swap-oob="true">
   {{ range .board }} {{ range . }} {{template "Square" dict "data" .}} {{end}}
   {{ end }}
@@ -17,11 +18,6 @@
     color: red;
   }
 </style>
-<script>
-  window.addEventListener("loadLegalMoves", (...rest) => {
-    console.log('legal moves received: ', rest)
-  })
-</script>
 <div id="boardContainer" class="flex items-center justify-center" hx-swap-oob="true">
   {{ if .board }}
   <div hx-ext="ws" ws-connect="/ws/board">
