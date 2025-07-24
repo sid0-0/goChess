@@ -1,5 +1,4 @@
 {{ define "Board" }}
-{{ template "LegalMoves" .}}
 <div id="board" class="board" hx-swap-oob="true">
   {{ range .board }} {{ range . }} {{template "Square" dict "data" .}} {{end}}
   {{ end }}
@@ -18,6 +17,35 @@
     color: red;
   }
 </style>
+<script>
+  highlightedSourceSquare = ''
+  legalMoves = {{ .legalMoves }};
+
+  highlightMoves = (file, rank) => {
+    console.log('from highlight', legalMoves, window.legalMoves)
+    Array.from(document.getElementsByClassName('legalMove')).forEach(el => el.remove())
+    possibleLegalMoves = window.legalMoves[`${file}${rank}`] || [];
+    highlightedSourceSquare = `${file}${rank}`
+    possibleLegalMoves.forEach(move => {
+      const square = document.getElementById(move);
+      if (!square) return
+      const highlightDiv = document.createElement('div');
+      highlightDiv.classList.add('legalMove');
+      if (square.childElementCount > 0) {
+        highlightDiv.classList.add('legalMove_attacking');
+        square.appendChild(highlightDiv);
+      } else {
+        highlightDiv.classList.add('legalMove_nonAttacking');
+        square.appendChild(highlightDiv);
+      }
+    });
+  }
+
+  window.addEventListener("loadLegalMoves", (event) => {
+    console.log(event)
+    legalMoves = JSON.parse(event.detail.value);
+  })
+</script>
 <div id="boardContainer" class="flex items-center justify-center" hx-swap-oob="true">
   {{ if .board }}
   <div hx-ext="ws" ws-connect="/ws/board">

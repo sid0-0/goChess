@@ -1,7 +1,8 @@
 {{ define "Square" }}
 <div id="{{.data.File}}{{.data.Rank}}"
-  class="bg-{{if .data.Color}}yellow-700{{else}}yellow-50{{end}} flex items-center grid-justify-center relative" {{ if
-  not .data.Piece }} hx-post="/move/{{.data.File}}{{.data.Rank}}" hx-trigger="click" {{ end }} hx-swap-oob="true">
+  class="bg-{{if .data.Color}}yellow-700{{else}}yellow-50{{end}} flex items-center grid-justify-center relative"
+  hx-post="/move" hx-trigger="click"
+  hx-vals='js:{"from": window.highlightedSourceSquare, "to": "{{.data.File}}{{.data.Rank}}"}' hx-swap-oob="true">
   {{if .data.Piece}}
   <img class="piece piece_{{.data.Piece.PieceType}}{{.data.Piece.Color}} h-full cursor-grab" hx-include="img"
     onclick="highlightMoves('{{.data.File}}','{{.data.Rank}}')" />
