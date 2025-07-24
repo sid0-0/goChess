@@ -104,7 +104,7 @@ func (client *Client) StartHandlingMessages(conn *websocket.Conn) {
 	go func() {
 		for msg := range client.Send {
 			if client.Conn != nil {
-				if err := client.Conn.WriteMessage(1, msg); err != nil {
+				if err := client.Conn.WriteMessage(websocket.TextMessage, msg); err != nil {
 					spew.Println("Error sending message:", err)
 				}
 			}
