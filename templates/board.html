@@ -22,7 +22,6 @@
   legalMoves = {{ .legalMoves }};
 
   highlightMoves = (file, rank) => {
-    console.log('from highlight', legalMoves, window.legalMoves)
     Array.from(document.getElementsByClassName('legalMove')).forEach(el => el.remove())
     possibleLegalMoves = window.legalMoves[`${file}${rank}`] || [];
     highlightedSourceSquare = `${file}${rank}`
@@ -42,7 +41,6 @@
   }
 
   window.addEventListener("loadLegalMoves", (event) => {
-    console.log(event)
     legalMoves = JSON.parse(event.detail.value);
   })
 </script>
