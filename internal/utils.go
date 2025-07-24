@@ -2,6 +2,7 @@ package internal
 
 import (
 	"encoding/json"
+	"errors"
 	"gochess/chessBoard"
 	"html/template"
 	"io/fs"
@@ -52,4 +53,24 @@ func GetLoadLegalMovesJson(board *chessBoard.Board) template.JS {
 		}
 	}
 	return template.JS("")
+}
+
+func ResolveSquare(board *chessBoard.Board, squareId string) *chessBoard.Square {
+	if len(squareId) != 2 {
+		return nil
+	}
+	ri, ci := int(squareId[1]-'1'), int(squareId[0]-'a')
+	square := board.GetSquare(ri, ci)
+	return square
+}
+
+func ResolveSquareAndMakeMove(board *chessBoard.Board, fromSquareId string, toSquareId string) error {
+	fromSquare := ResolveSquare(board, fromSquareId)
+	toSquare := ResolveSquare(board, toSquareId)
+
+	if toSquare == nil || fromSquare == nil {
+		return errors.New("invalid square")
+	}
+	err := board.MakeMove(fromSquare, toSquare)
+	return err
 }

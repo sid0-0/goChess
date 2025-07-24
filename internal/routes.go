@@ -1,13 +1,13 @@
 package internal
 
 import (
+	"bytes"
 	"encoding/json"
 	"gochess/chessBoard"
 	"gochess/internal/customMiddleware"
 	"gochess/ws"
 	"html/template"
 	"net/http"
-	"time"
 
 	"github.com/davecgh/go-spew/spew"
 	"github.com/go-chi/chi/v5"
@@ -96,22 +96,8 @@ func loadRoutes(router *chi.Mux, wsHub *ws.Hub) {
 		fromSquareId := r.FormValue("from")
 		toSquareId := r.FormValue("to")
 		defer r.Body.Close()
-		if len(toSquareId) != 2 || len(fromSquareId) != 2 {
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-		ri, ci := int(fromSquareId[1]-'1'), int(fromSquareId[0]-'a')
-		fromSquare := currentBoard.GetSquare(ri, ci)
-		ri, ci = int(toSquareId[1]-'1'), int(toSquareId[0]-'a')
-		toSquare := currentBoard.GetSquare(ri, ci)
 
-		if toSquare == nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte("Invalid square"))
-			return
-		}
-
-		err = currentBoard.MakeMove(fromSquare, toSquare)
+		err = ResolveSquareAndMakeMove(currentBoard, fromSquareId, toSquareId)
 
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
@@ -143,21 +129,32 @@ func loadRoutes(router *chi.Mux, wsHub *ws.Hub) {
 			return
 		}
 
-		clientContextData := r.Context().Value(clientContextDataKey).(*ClientContextData)
+		ctx := r.Context()
+		templates := ctx.Value(templatesContextKey).(*template.Template)
+		clientContextData := ctx.Value(clientContextDataKey).(*ClientContextData)
 		clientContextData.WebsocketClient.StartHandlingMessages(conn)
+		board := clientContextData.Board
 
 		spew.Println("WebSocket connected")
 
 		go func() {
 			for msg := range clientContextData.WebsocketClient.Receive {
-				spew.Println("Received message:", string(msg))
+				if msg["type"] == "move" {
+					err = ResolveSquareAndMakeMove(board, msg["from"].(string), msg["to"].(string))
+					if err != nil {
+						spew.Println("Error making move:", err)
+						continue
+					}
+					var buffer bytes.Buffer
+					templates.ExecuteTemplate(&buffer, "Board", map[string]any{
+						"board": board.GetRepresentationalSquares(),
+					})
+					clientContextData.WebsocketClient.Send <- buffer.Bytes()
+					legalMoves := GetLoadLegalMovesJson(board)
+					clientContextData.WebsocketClient.Send <- []byte(`{"type": "loadLegalMoves", "data": ` + legalMoves + `}`)
+				}
 			}
 		}()
-
-		for {
-			clientContextData.WebsocketClient.Send <- []byte("Hello from the server!")
-			time.Sleep(1 * time.Second)
-		}
 	})
 
 }

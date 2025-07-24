@@ -1,6 +1,8 @@
 package ws
 
 import (
+	"encoding/json"
+
 	"github.com/davecgh/go-spew/spew"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
@@ -96,25 +98,31 @@ func NewClient(id string) *Client {
 
 func (client *Client) StartHandlingMessages(conn *websocket.Conn) {
 	client.Conn = conn
-	client.Receive = make(chan []byte)
+	client.Receive = make(chan map[string]any)
 	client.Send = make(chan []byte)
 
 	go func() {
 		for msg := range client.Send {
-			if client.Conn == nil {
-				continue
-			}
-			if err := client.Conn.WriteMessage(1, msg); err != nil {
-				spew.Println("Error sending message:", err)
+			if client.Conn != nil {
+				if err := client.Conn.WriteMessage(1, msg); err != nil {
+					spew.Println("Error sending message:", err)
+				}
 			}
 		}
 	}()
 
 	go func() {
-		_, p, err := conn.ReadMessage()
-		if err != nil {
-			return
+		for {
+			_, p, err := conn.ReadMessage()
+			if err != nil {
+				return
+			}
+			mappedMessage := map[string]any{}
+			if err := json.Unmarshal(p, &mappedMessage); err != nil {
+				spew.Println("Error unmarshalling message:", err)
+				return
+			}
+			client.Receive <- mappedMessage
 		}
-		client.Receive <- p
 	}()
 }
