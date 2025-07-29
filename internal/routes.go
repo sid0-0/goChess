@@ -83,6 +83,57 @@ func loadRoutes(router *chi.Mux, wsHub *ws.Hub) {
 		}
 	})
 
+	router.Post("/join_game", func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		templates := ctx.Value(templatesContextKey).(*template.Template)
+		clientContextData := ctx.Value(clientContextDataKey).(*ClientContextData)
+		poolToBoardMap := ctx.Value(customMiddleware.PoolToBoardMapContextKey).(customMiddleware.PoolToBoardMap)
+
+		err := r.ParseForm()
+		if err != nil {
+			http.Error(w, "Could not parse form", http.StatusBadRequest)
+			return
+		}
+
+		gameIdToJoin := r.FormValue("gameID")
+
+		var pool *ws.Pool
+		for _, poolToCheck := range wsHub.Pools {
+			if poolToCheck.ID == gameIdToJoin {
+				pool = poolToCheck
+			}
+		}
+
+		board := poolToBoardMap[gameIdToJoin]
+
+		if board == nil || pool == nil {
+			http.Error(w, "Pool not found", http.StatusBadRequest)
+			return
+		}
+
+		pool.Register <- clientContextData.WebsocketClient
+
+		w.Header().Set("Content-type", "text/html")
+
+		legalMoves := GetLoadLegalMovesJson(board)
+		templateArgs := map[string]any{
+			"board":   board.GetRepresentationalSquares(),
+			"boardID": pool.ID,
+		}
+		jsonLegalMoves, _ := json.Marshal(map[string]any{"loadLegalMoves": legalMoves})
+		w.Header().Set("HX-Trigger", string(jsonLegalMoves))
+		err = templates.ExecuteTemplate(w, "BoardContainer", templateArgs)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(err.Error()))
+		}
+		err = templates.ExecuteTemplate(w, "HomeActions", templateArgs)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(err.Error()))
+		}
+	})
+
 	router.Post("/move", func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		templates := ctx.Value(templatesContextKey).(*template.Template)
