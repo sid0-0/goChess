@@ -38,9 +38,9 @@ func GetLoadLegalMovesJson(board *chessBoard.Board) template.JS {
 		// collect all legal moves in an object
 		for _, row := range board.Squares {
 			for _, square := range row {
-				if square.Piece == nil || square.Piece.Color != board.Turn {
-					continue // skip squares that are not the current player's turn
-				}
+				// if square.Piece == nil || square.Piece.Color != board.Turn {
+				// 	continue // skip squares that are not the current player's turn
+				// }
 				squareNotation := square.File + square.Rank
 				legalMovesForSquare := []string{}
 				for _, square := range square.LegalMoves {
