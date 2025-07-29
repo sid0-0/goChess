@@ -1,9 +1,19 @@
 {{ define "HomeActions"}}
-<div class="flex items-center justify-center w-full m-t-24" id="homeButtonsContainer" hx-swap-oob="true">
+<div class="flex flex-col gap-4 items-center justify-center w-full m-t-24" id="homeButtonsContainer" hx-swap-oob="true">
   {{ if not .board }}
   <button
-    class="p-y-8 p-x-12 bg-emerald-200 hover:bg-emerald-300 rounded-3xl cursor-pointer text-slate-900 text-xl shadow-lg border-0"
-    hx-get="/start_new_game">Start a new game</button>
+    class="p-y-4 p-x-12 bg-emerald-200 hover:bg-emerald-300 cursor-pointer text-slate-900 text-xl shadow-lg border-0"
+    hx-get="/start_new_game">
+    Start new game
+  </button>
+  <div class="flex text-xl shadow-lg">
+    <input type="text" name="join_game_id" placeholder="Game ID"
+      class="border-0 p-y-4 text-center w-lg p-x-2 outline-none text-xl">
+    <button hx-post="/join_game" hx-vals="js:{'gameID': event.target.previousElementSibling.value}"
+      class="border-0 p-y-4 p-x-12 bg-emerald-200 hover:bg-emerald-300 cursor-pointer text-slate-900 text-xl">
+      Join game
+    </button>
+  </div>
   {{ end }}
 </div>
 {{end}}
