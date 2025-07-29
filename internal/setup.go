@@ -1,7 +1,9 @@
 package internal
 
 import (
-	"gochess/chessBoard"
+	"context"
+	"gochess/internal/customMiddleware"
+	"gochess/ws"
 	"html/template"
 	"net/http"
 	"time"
@@ -11,22 +13,55 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 )
 
-func setupRouter(allTemplates *template.Template, board *chessBoard.Board) *chi.Mux {
-
+func setupRouter(allTemplates *template.Template, wsHub *ws.Hub) *chi.Mux {
 	router := chi.NewRouter()
 	router.Use(middleware.RequestID)
 	router.Use(middleware.Logger)
 	router.Use(middleware.Timeout(30 * time.Second))
 
+	router.Use(customMiddleware.CookieHandler)
+	router.Use(customMiddleware.PoolToBoardMapMiddleware)
+
+	// load context in requests
+	router.Use(func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			// Create a new context with the templates and board hubs
+			ctx := r.Context()
+
+			poolToBoardMap := r.Context().Value(customMiddleware.PoolToBoardMapContextKey).(customMiddleware.PoolToBoardMap)
+
+			sessionId, _ := r.Cookie(customMiddleware.CookieKey)
+
+			ok, client, clientPool := wsHub.IsClientInHub(sessionId.Value)
+
+			if ok {
+				ctx = context.WithValue(ctx, clientContextDataKey, &ClientContextData{
+					Board:           poolToBoardMap[clientPool.ID],
+					WebsocketClient: client,
+					Pool:            clientPool,
+				})
+			} else {
+				ctx = context.WithValue(ctx, clientContextDataKey, &ClientContextData{
+					Board:           nil,
+					WebsocketClient: ws.NewClient(sessionId.Value),
+					Pool:            nil,
+				})
+
+			}
+
+			ctx = context.WithValue(ctx, templatesContextKey, allTemplates)
+			// Call the next handler with the new context
+			next.ServeHTTP(w, r.WithContext(ctx))
+		})
+	})
+
 	// Load all routes
-	loadRoutes(router, allTemplates, board)
+	loadRoutes(router, wsHub)
 
 	return router
 }
 
 func RunServer() {
-	// Create a new chess board
-	newBoard := chessBoard.New()
 
 	// Load all templates
 	allTemplates, err := LoadAllTemplates("templates")
@@ -35,8 +70,11 @@ func RunServer() {
 		return
 	}
 
+	// Create a new chess board for local dev
+	wsHub := ws.NewHub()
+
 	// Initialize the router
-	router := setupRouter(allTemplates, newBoard)
+	router := setupRouter(allTemplates, wsHub)
 
 	// Start the server
 	err = http.ListenAndServe(":8080", router)

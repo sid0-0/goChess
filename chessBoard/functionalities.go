@@ -6,6 +6,9 @@ import (
 )
 
 func (b *Board) MakeMove(oldSquare *Square, newSquare *Square) error {
+	if oldSquare == nil || newSquare == nil || oldSquare == newSquare {
+		return errors.New("invalid squares")
+	}
 	if oldSquare.Piece.Color != b.Turn {
 		return errors.New("not your turn")
 	}

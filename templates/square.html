@@ -1,25 +1,14 @@
 {{ define "Square" }}
-<div
-  id="{{.data.File}}{{.data.Rank}}"
-  class="bg-{{if .data.Color}}yellow-700{{else}}yellow-50{{end}} flex items-center grid-justify-center relative"
-  hx-swap-oob="true"
-  {{if
-  not
-  .data.Piece}}
-  hx-post="/move/{{.data.File}}{{.data.Rank}}"
+<div id="{{.data.File}}{{.data.Rank}}"
+  class="bg-{{if .data.Color}}yellow-700{{else}}yellow-50{{end}} flex items-center grid-justify-center relative" ws-send
   hx-trigger="click"
-  {{end}}
->
+  hx-vals='js:{"from": window.highlightedSourceSquare, "to": "{{.data.File}}{{.data.Rank}}", "type":"move"}'
+  hx-swap-oob="true">
   {{if .data.Piece}}
-  <img
-    class="piece piece_{{.data.Piece.PieceType}}{{.data.Piece.Color}} h-95% cursor-grab"
-    hx-post="/highlight/{{.data.File}}{{.data.Rank}}"
-    hx-include="img"
-  />
+  <img class="piece piece_{{.data.Piece.PieceType}}{{.data.Piece.Color}} h-full cursor-grab" hx-include="img"
+    onclick="highlightMoves('{{.data.File}}','{{.data.Rank}}')" />
   {{end}} {{if .highlight}}
-  <div
-    class="legalMove {{if .data.Piece}} legalMove_attacking {{else}} legalMove_nonAttacking {{end}}"
-  ></div>
+  <div class="legalMove {{if .data.Piece}} legalMove_attacking {{else}} legalMove_nonAttacking {{end}}"></div>
   {{end}}
 </div>
 

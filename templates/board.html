@@ -1,8 +1,15 @@
 {{ define "Board" }}
+<div id="board" class="board" hx-swap-oob="true">
+  {{ range .board }} {{ range . }} {{template "Square" dict "data" .}} {{end}}
+  {{ end }}
+</div>
+{{ end }}
+
+{{ define "BoardContainer" }}
 <style>
-  .boardContainer {
-    height: 100%;
-    width: 100%;
+  .board {
+    height: 500px;
+    aspect-ratio: 1;
     display: grid;
     grid-template-columns: repeat(8, 1fr);
     grid-template-rows: repeat(8, 1fr);
@@ -10,9 +17,51 @@
     color: red;
   }
 </style>
-<div class="boardContainer">
-  {{ range .board }} {{ range . }} {{template "Square" dict "data" .}} {{end}}
+<script>
+  highlightedSourceSquare = ''
+  legalMoves = {{ .legalMoves }};
+
+  highlightMoves = (file, rank) => {
+    Array.from(document.getElementsByClassName('legalMove')).forEach(el => el.remove())
+    possibleLegalMoves = window.legalMoves[`${file}${rank}`] || [];
+    highlightedSourceSquare = `${file}${rank}`
+    possibleLegalMoves.forEach(move => {
+      const square = document.getElementById(move);
+      if (!square) return
+      const highlightDiv = document.createElement('div');
+      highlightDiv.classList.add('legalMove');
+      if (square.childElementCount > 0) {
+        highlightDiv.classList.add('legalMove_attacking');
+        square.appendChild(highlightDiv);
+      } else {
+        highlightDiv.classList.add('legalMove_nonAttacking');
+        square.appendChild(highlightDiv);
+      }
+    });
+  }
+
+  window.addEventListener("loadLegalMoves", (event) => {
+    legalMoves = JSON.parse(event.detail.value);
+  })
+</script>
+<div id="boardContainer" class="flex items-center justify-center" hx-swap-oob="true">
+  {{ if .board }}
+  <script>
+    const boardWebSocket = document.getElementById("boardWebsocket");
+    boardWebSocket?.addEventListener("htmx:wsAfterMessage", function (evt) {
+      try {
+        const message = JSON.parse(evt.detail.message);
+        if (message.type === "loadLegalMoves") {
+          legalMoves = message.data;
+        }
+      } catch (error) {
+        // console.error("Error parsing WS message:", error);
+      }
+    });
+  </script>
+  <div hx-ext="ws" ws-connect="/ws/board" id="boardWebsocket">
+    {{ template "Board" . }}
+  </div>
   {{ end }}
 </div>
-
 {{ end }}
