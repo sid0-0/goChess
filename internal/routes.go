@@ -27,6 +27,7 @@ func loadRoutes(router *chi.Mux, wsHub *ws.Hub) {
 		templates := ctx.Value(templatesContextKey).(*template.Template)
 		clientContextData := ctx.Value(clientContextDataKey).(*ClientContextData)
 		currentBoard := clientContextData.Board
+		pool := clientContextData.Pool
 		w.Header().Set("Content-type", "text/html")
 
 		var err error
@@ -39,6 +40,7 @@ func loadRoutes(router *chi.Mux, wsHub *ws.Hub) {
 			err = templates.ExecuteTemplate(w, "Main", map[string]any{
 				"board":      currentBoard.GetRepresentationalSquares(),
 				"legalMoves": legalMoves,
+				"boardID":    pool.ID,
 			})
 		}
 		if err != nil {
@@ -64,7 +66,8 @@ func loadRoutes(router *chi.Mux, wsHub *ws.Hub) {
 
 		legalMoves := GetLoadLegalMovesJson(newBoard)
 		templateArgs := map[string]any{
-			"board": newBoard.GetRepresentationalSquares(),
+			"board":   newBoard.GetRepresentationalSquares(),
+			"boardID": pool.ID,
 		}
 		jsonLegalMoves, _ := json.Marshal(map[string]any{"loadLegalMoves": legalMoves})
 		w.Header().Set("HX-Trigger", string(jsonLegalMoves))

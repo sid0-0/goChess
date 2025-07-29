@@ -44,7 +44,7 @@
     legalMoves = JSON.parse(event.detail.value);
   })
 </script>
-<div id="boardContainer" class="flex items-center justify-center" hx-swap-oob="true">
+<div id="boardContainer" class="flex flex-col gap-4 items-center justify-center" hx-swap-oob="true">
   {{ if .board }}
   <script>
     const boardWebSocket = document.getElementById("boardWebsocket");
@@ -62,6 +62,12 @@
   <div hx-ext="ws" ws-connect="/ws/board" id="boardWebsocket">
     {{ template "Board" . }}
   </div>
+  {{ end }}
+  {{ if .boardID }}
+  <code id="boardID" hx-swap-oob="true" class="p-4 bg-gray-700 text-gray-100 rounded-lg flex items-center gap-2">
+    <span>Board ID: {{ .boardID }}</span>
+    <div class="copy_icon hover:bg-gray-700 rounded" alt="Copy" onclick="navigator.clipboard.writeText('{{ .boardID }}')"></div>
+  </code>
   {{ end }}
 </div>
 {{ end }}
