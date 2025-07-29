@@ -26,6 +26,7 @@ func CookieHandler(next http.Handler) http.Handler {
 				Value: uuid.NewString(),
 			}
 			http.SetCookie(w, newCookie)
+			r.AddCookie(newCookie)
 			ctx := r.Context()
 			ctx = context.WithValue(ctx, SessionKey, newCookie)
 			next.ServeHTTP(w, r.WithContext(ctx))
