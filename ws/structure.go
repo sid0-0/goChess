@@ -16,6 +16,7 @@ type Pool struct {
 	Clients    []*Client    // Map of clients in the pool
 	Register   chan *Client // Channel to register new clients
 	Unregister chan *Client // Channel to unregister clients
+	Broadcast  chan []byte  // Channel to broadcast messages to all clients in the pool
 }
 
 type Hub struct {

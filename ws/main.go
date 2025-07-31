@@ -26,6 +26,7 @@ func (hub *Hub) NewPool() *Pool {
 		Register:   make(chan *Client),
 		Unregister: make(chan *Client),
 		Clients:    []*Client{},
+		Broadcast:  make(chan []byte),
 	}
 
 	go func() {
@@ -65,6 +66,11 @@ func (hub *Hub) NewPool() *Pool {
 							return
 						}
 					}
+				}
+
+			case broadcastMessage := <-newPool.Broadcast:
+				for _, client := range newPool.Clients {
+					client.Send <- broadcastMessage
 				}
 			}
 		}

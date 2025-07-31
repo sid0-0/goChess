@@ -187,6 +187,7 @@ func loadRoutes(router *chi.Mux, wsHub *ws.Hub) {
 		templates := ctx.Value(templatesContextKey).(*template.Template)
 		clientContextData := ctx.Value(clientContextDataKey).(*ClientContextData)
 		clientContextData.WebsocketClient.StartHandlingMessages(conn)
+		pool := clientContextData.Pool
 		board := clientContextData.Board
 
 		spew.Println("WebSocket connected")
@@ -203,9 +204,9 @@ func loadRoutes(router *chi.Mux, wsHub *ws.Hub) {
 					templates.ExecuteTemplate(&buffer, "Board", map[string]any{
 						"board": board.GetRepresentationalSquares(),
 					})
-					clientContextData.WebsocketClient.Send <- buffer.Bytes()
+					pool.Broadcast <- buffer.Bytes()
 					legalMoves := GetLoadLegalMovesJson(board)
-					clientContextData.WebsocketClient.Send <- []byte(`{"type": "loadLegalMoves", "data": ` + legalMoves + `}`)
+					pool.Broadcast <- []byte(`{"type": "loadLegalMoves", "data": ` + legalMoves + `}`)
 				}
 			}
 		}()
