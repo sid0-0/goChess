@@ -219,12 +219,14 @@ func loadRoutes(router *chi.Mux, wsHub *ws.Hub[ClientInfoType]) {
 						spew.Println("Error making move:", err)
 						continue
 					}
-					var buffer bytes.Buffer
-					boardPlayerColor := GetBoardPlayerColorFromPlayerType(clientInfo.Type)
-					templates.ExecuteTemplate(&buffer, "Board", map[string]any{
-						"board": board.GetRepresentationalSquares(boardPlayerColor),
-					})
-					pool.Broadcast <- buffer.Bytes()
+					for _, client := range pool.Clients {
+						var buffer bytes.Buffer
+						boardPlayerColor := GetBoardPlayerColorFromPlayerType(client.Info.Type)
+						templates.ExecuteTemplate(&buffer, "Board", map[string]any{
+							"board": board.GetRepresentationalSquares(boardPlayerColor),
+						})
+						client.Send <- buffer.Bytes()
+					}
 					legalMoves := GetLoadLegalMovesJson(board)
 					pool.Broadcast <- []byte(`{"type": "loadLegalMoves", "data": ` + legalMoves + `}`)
 				}
