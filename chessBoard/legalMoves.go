@@ -43,9 +43,6 @@ func isLegalMove(b *Board, originalFrom *Square, originalTo *Square) bool {
 func (b *Board) LoadLegalMoves(currentSquare *Square) {
 	currentSquare.LegalMoves = []*Square{}
 	for _, move := range currentSquare.PieceMoves {
-		// if currentSquare.File == "e" && currentSquare.Rank == "3" && move.File == "d" && move.Rank == "3" {
-		// 	fmt.Println("King", currentSquare.File, currentSquare.Rank, move.File, move.Rank, isLegalMove(b, currentSquare, move))
-		// }
 		if isLegalMove(b, currentSquare, move) {
 			currentSquare.LegalMoves = append(currentSquare.LegalMoves, move)
 		}
