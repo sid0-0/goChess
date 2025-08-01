@@ -26,6 +26,7 @@ func loadRoutes(router *chi.Mux, wsHub *ws.Hub[ClientInfoType]) {
 		ctx := r.Context()
 		templates := ctx.Value(templatesContextKey).(*template.Template)
 		clientContextData := ctx.Value(clientContextDataKey).(*ClientContextData)
+		clientInfo := clientContextData.WebsocketClient.Info
 		currentBoard := clientContextData.Board
 		pool := clientContextData.Pool
 		w.Header().Set("Content-type", "text/html")
@@ -37,8 +38,10 @@ func loadRoutes(router *chi.Mux, wsHub *ws.Hub[ClientInfoType]) {
 			legalMoves := GetLoadLegalMovesJson(currentBoard)
 			jsonLegalMoves, _ := json.Marshal(map[string]any{"loadLegalMoves": legalMoves})
 			w.Header().Set("HX-Trigger", string(jsonLegalMoves))
+
+			boardPlayerColor := GetBoardPlayerColorFromPlayerType(clientInfo.Type)
 			err = templates.ExecuteTemplate(w, "Main", map[string]any{
-				"board":      currentBoard.GetRepresentationalSquares(),
+				"board":      currentBoard.GetRepresentationalSquares(boardPlayerColor),
 				"legalMoves": legalMoves,
 				"boardID":    pool.ID,
 			})
@@ -67,9 +70,10 @@ func loadRoutes(router *chi.Mux, wsHub *ws.Hub[ClientInfoType]) {
 
 		w.Header().Set("Content-type", "text/html")
 
+		boardPlayerColor := GetBoardPlayerColorFromPlayerType(clientInfo.Type)
 		legalMoves := GetLoadLegalMovesJson(newBoard)
 		templateArgs := map[string]any{
-			"board":   newBoard.GetRepresentationalSquares(),
+			"board":   newBoard.GetRepresentationalSquares(boardPlayerColor),
 			"boardID": pool.ID,
 		}
 		jsonLegalMoves, _ := json.Marshal(map[string]any{"loadLegalMoves": legalMoves})
@@ -126,9 +130,10 @@ func loadRoutes(router *chi.Mux, wsHub *ws.Hub[ClientInfoType]) {
 
 		w.Header().Set("Content-type", "text/html")
 
+		boardPlayerColor := GetBoardPlayerColorFromPlayerType(clientInfo.Type)
 		legalMoves := GetLoadLegalMovesJson(board)
 		templateArgs := map[string]any{
-			"board":   board.GetRepresentationalSquares(),
+			"board":   board.GetRepresentationalSquares(boardPlayerColor),
 			"boardID": pool.ID,
 		}
 		jsonLegalMoves, _ := json.Marshal(map[string]any{"loadLegalMoves": legalMoves})
@@ -174,8 +179,9 @@ func loadRoutes(router *chi.Mux, wsHub *ws.Hub[ClientInfoType]) {
 		legalMoves := GetLoadLegalMovesJson(currentBoard)
 		jsonLegalMoves, _ := json.Marshal(map[string]any{"loadLegalMoves": legalMoves})
 		w.Header().Set("HX-Trigger", string(jsonLegalMoves))
+		boardPlayerColor := GetBoardPlayerColorFromPlayerType(clientInfo.Type)
 		templateArgs := map[string]any{
-			"board": currentBoard.GetRepresentationalSquares(),
+			"board": currentBoard.GetRepresentationalSquares(boardPlayerColor),
 		}
 		templates.ExecuteTemplate(w, "Board", templateArgs)
 	})
@@ -214,8 +220,9 @@ func loadRoutes(router *chi.Mux, wsHub *ws.Hub[ClientInfoType]) {
 						continue
 					}
 					var buffer bytes.Buffer
+					boardPlayerColor := GetBoardPlayerColorFromPlayerType(clientInfo.Type)
 					templates.ExecuteTemplate(&buffer, "Board", map[string]any{
-						"board": board.GetRepresentationalSquares(),
+						"board": board.GetRepresentationalSquares(boardPlayerColor),
 					})
 					pool.Broadcast <- buffer.Bytes()
 					legalMoves := GetLoadLegalMovesJson(board)

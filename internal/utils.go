@@ -80,3 +80,10 @@ func ResolveSquareAndMakeMove(board *chessBoard.Board, playerType ClientType, fr
 	err := board.MakeMove(fromSquare, toSquare)
 	return err
 }
+
+func GetBoardPlayerColorFromPlayerType(playerType ClientType) chessBoard.COLOR {
+	if playerType == PLAYER_B {
+		return chessBoard.BLACK
+	}
+	return chessBoard.WHITE
+}

@@ -30,10 +30,18 @@ func New() *Board {
 	return &newBoard
 }
 
-func (b Board) GetRepresentationalSquares() [8][8]Square {
+func (b Board) GetRepresentationalSquares(forPlayerColor COLOR) [8][8]Square {
 	ans := b.Squares
-	for i := 0; i < 4; i++ {
-		ans[i], ans[7-i] = ans[7-i], ans[i]
+	if forPlayerColor == WHITE {
+		for i := 0; i < len(ans)/2; i++ {
+			ans[i], ans[7-i] = ans[7-i], ans[i]
+		}
+	} else {
+		for i := 0; i < len(ans)/2; i++ {
+			for j := 0; j < len(ans[i]); j++ {
+				ans[i][j], ans[i][7-j] = ans[i][7-j], ans[i][j]
+			}
+		}
 	}
 	return ans
 }
