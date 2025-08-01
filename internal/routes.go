@@ -7,9 +7,9 @@ import (
 	"gochess/internal/customMiddleware"
 	"gochess/ws"
 	"html/template"
+	"log"
 	"net/http"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/go-chi/chi/v5"
 	"github.com/gorilla/websocket"
 )
@@ -194,10 +194,10 @@ func loadRoutes(router *chi.Mux, wsHub *ws.Hub[ClientInfoType]) {
 	}
 
 	router.Get("/ws/board", func(w http.ResponseWriter, r *http.Request) {
-		spew.Println("WebSocket connection requested")
+		log.Println("WebSocket connection requested")
 		conn, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
-			spew.Println("Upgrade error:", err)
+			log.Println("Upgrade error:", err)
 			return
 		}
 
@@ -209,14 +209,14 @@ func loadRoutes(router *chi.Mux, wsHub *ws.Hub[ClientInfoType]) {
 		pool := clientContextData.Pool
 		board := clientContextData.Board
 
-		spew.Println("WebSocket connected")
+		log.Println("WebSocket connected")
 
 		go func() {
 			for msg := range clientContextData.WebsocketClient.Receive {
 				if msg["type"] == "move" {
 					err = ResolveSquareAndMakeMove(board, clientInfo.Type, msg["from"].(string), msg["to"].(string))
 					if err != nil {
-						spew.Println("Error making move:", err)
+						log.Println("Error making move:", err)
 						continue
 					}
 					for _, client := range pool.Clients {

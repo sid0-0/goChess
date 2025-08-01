@@ -2,8 +2,8 @@ package ws
 
 import (
 	"encoding/json"
+	"log"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 )
@@ -33,32 +33,32 @@ func (hub *Hub[T]) NewPool() *Pool[T] {
 		for {
 			select {
 			case newClient := <-newPool.Register:
-				spew.Println(newClient)
+				log.Println(newClient)
 				// Check if the client is already in the hub
 				for _, client := range newPool.Clients {
 					if client.ID == newClient.ID {
 						break
 					}
 				}
-				spew.Println("Registering new client:", newClient.ID)
+				log.Println("Registering new client:", newClient.ID)
 				// Add the new client to the pool
 				newPool.Clients = append(newPool.Clients, newClient)
 				newClient.PoolID = newPool.ID
 
 			case clientToRemove := <-newPool.Unregister:
-				spew.Println("Unregistering client:", clientToRemove.ID)
+				log.Println("Unregistering client:", clientToRemove.ID)
 				for idx, client := range newPool.Clients {
 					if client.ID == clientToRemove.ID {
-						spew.Println("Found client to remove:", clientToRemove.ID)
+						log.Println("Found client to remove:", clientToRemove.ID)
 						// Remove the client from the pool
 						newPool.Clients = append(newPool.Clients[:idx], newPool.Clients[idx+1:]...)
 
 						// cleanup pool if no clients left
 						if len(newPool.Clients) == 0 {
-							spew.Println("No clients left in pool, removing pool:", newPool.ID)
+							log.Println("No clients left in pool, removing pool:", newPool.ID)
 							for idx, hubPool := range hub.Pools {
 								if hubPool.ID == newPool.ID {
-									spew.Println("Found pool to remove:", hubPool.ID)
+									log.Println("Found pool to remove:", hubPool.ID)
 									// Remove the pool from the hub
 									hub.Pools = append(hub.Pools[:idx], hub.Pools[idx+1:]...)
 								}
@@ -106,7 +106,7 @@ func (client *Client[T]) StartHandlingMessages(conn *websocket.Conn) {
 		for msg := range client.Send {
 			if client.Conn != nil {
 				if err := client.Conn.WriteMessage(websocket.TextMessage, msg); err != nil {
-					spew.Println("Error sending message:", err)
+					log.Println("Error sending message:", err)
 				}
 			}
 		}
@@ -120,7 +120,7 @@ func (client *Client[T]) StartHandlingMessages(conn *websocket.Conn) {
 			}
 			mappedMessage := map[string]any{}
 			if err := json.Unmarshal(p, &mappedMessage); err != nil {
-				spew.Println("Error unmarshalling message:", err)
+				log.Println("Error unmarshalling message:", err)
 				return
 			}
 			client.Receive <- mappedMessage

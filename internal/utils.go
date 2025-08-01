@@ -6,16 +6,16 @@ import (
 	"gochess/chessBoard"
 	"html/template"
 	"io/fs"
+	"log"
 	"path/filepath"
 	"strings"
 
 	"github.com/Masterminds/sprig/v3"
-	"github.com/davecgh/go-spew/spew"
 )
 
 func LoadAllTemplates(location string) (*template.Template, error) {
 	var allTemplates *template.Template
-	spew.Println("Loading templates from:", location)
+	log.Println("Loading templates from:", location)
 	allTemplates = template.New("").Funcs(sprig.FuncMap())
 	err := filepath.WalkDir(location, func(path string, _ fs.DirEntry, _ error) error {
 		if strings.HasSuffix(path, ".html") {

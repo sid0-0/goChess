@@ -5,10 +5,10 @@ import (
 	"gochess/internal/customMiddleware"
 	"gochess/ws"
 	"html/template"
+	"log"
 	"net/http"
 	"time"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 )
@@ -66,7 +66,7 @@ func RunServer() {
 	// Load all templates
 	allTemplates, err := LoadAllTemplates("templates")
 	if err != nil {
-		spew.Println("Template parsing failed", err)
+		log.Println("Template parsing failed", err)
 		return
 	}
 
@@ -79,8 +79,8 @@ func RunServer() {
 	// Start the server
 	err = http.ListenAndServe(":8080", router)
 	if err != nil {
-		spew.Println("Server failed to start:", err)
+		log.Println("Server failed to start:", err)
 	} else {
-		spew.Println("Started Go Chess Server at port :8080")
+		log.Println("Started Go Chess Server at port :8080")
 	}
 }
