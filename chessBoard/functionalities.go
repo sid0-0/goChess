@@ -2,6 +2,7 @@ package chessBoard
 
 import (
 	"errors"
+	"math"
 	"slices"
 )
 
@@ -17,6 +18,17 @@ func (b *Board) MakeMove(oldSquare *Square, newSquare *Square) error {
 	}
 	newSquare.Piece = oldSquare.Piece
 	oldSquare.Piece = nil
+
+	if newSquare.Piece.PieceType == PAWN {
+		if math.Abs(float64(oldSquare.Ri-newSquare.Ri)) == 2 {
+			b.EnPassantSquare = b.GetSquare((oldSquare.Ri+newSquare.Ri)/2, oldSquare.Ci)
+		}
+		if b.EnPassantSquare == newSquare {
+			b.EnPassantSquare = nil
+			squareToClear := b.GetSquare(oldSquare.Ri, newSquare.Ci)
+			squareToClear.Piece = nil
+		}
+	}
 
 	err := b.EvaluateLegalMoves()
 	if err != nil {

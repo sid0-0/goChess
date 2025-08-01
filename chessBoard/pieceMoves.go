@@ -115,8 +115,14 @@ func (b *Board) loadPawnPieceMoves(currentSquare *Square) {
 	for _, diff := range []PositionalDiff{{1, 1}, {1, -1}} {
 		nr := currentSquare.Ri + multiplier*diff.r
 		nc := currentSquare.Ci + multiplier*diff.c
-		if b.isIndexInRange(nr, nc) && b.Squares[nr][nc].Piece != nil && currentSquare.Piece.Color != b.Squares[nr][nc].Piece.Color {
-			newData = append(newData, &b.Squares[nr][nc])
+		targetSquare := b.GetSquare(nr, nc)
+		if targetSquare == nil {
+			continue
+		}
+		isAttackingAPiece := targetSquare.Piece != nil && currentSquare.Piece.Color != targetSquare.Piece.Color
+		isEnPassantPossible := (targetSquare == b.EnPassantSquare)
+		if isAttackingAPiece || isEnPassantPossible {
+			newData = append(newData, targetSquare)
 		}
 	}
 
