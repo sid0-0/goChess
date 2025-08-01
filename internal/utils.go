@@ -67,7 +67,10 @@ func ResolveSquare(board *chessBoard.Board, squareId string) *chessBoard.Square 
 	return square
 }
 
-func ResolveSquareAndMakeMove(board *chessBoard.Board, fromSquareId string, toSquareId string) error {
+func ResolveSquareAndMakeMove(board *chessBoard.Board, playerType ClientType, fromSquareId string, toSquareId string) error {
+	if !((playerType == PLAYER_W && board.Turn == chessBoard.WHITE) || (playerType == PLAYER_B && board.Turn == chessBoard.BLACK)) {
+		return errors.New("it's not your turn")
+	}
 	fromSquare := ResolveSquare(board, fromSquareId)
 	toSquare := ResolveSquare(board, toSquareId)
 

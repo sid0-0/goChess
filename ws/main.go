@@ -8,7 +8,7 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-func (hub *Hub) IsClientInHub(sessionIdToCheck string) (bool, *Client, *Pool) {
+func (hub *Hub[T]) IsClientInHub(sessionIdToCheck string) (bool, *Client[T], *Pool[T]) {
 	for _, pool := range hub.Pools {
 		for _, client := range pool.Clients {
 			if sessionIdToCheck == client.ID {
@@ -19,13 +19,13 @@ func (hub *Hub) IsClientInHub(sessionIdToCheck string) (bool, *Client, *Pool) {
 	return false, nil, nil
 }
 
-func (hub *Hub) NewPool() *Pool {
+func (hub *Hub[T]) NewPool() *Pool[T] {
 	newPoolId := uuid.NewString()
-	newPool := &Pool{
+	newPool := &Pool[T]{
 		ID:         newPoolId,
-		Register:   make(chan *Client),
-		Unregister: make(chan *Client),
-		Clients:    []*Client{},
+		Register:   make(chan *Client[T]),
+		Unregister: make(chan *Client[T]),
+		Clients:    []*Client[T]{},
 		Broadcast:  make(chan []byte),
 	}
 
@@ -79,30 +79,25 @@ func (hub *Hub) NewPool() *Pool {
 	return newPool
 }
 
-func (pool *Pool) AddClient(client *Client) {
-	client.ID = uuid.NewString()
-	pool.Register <- client
-}
-
-func NewHub() *Hub {
-	newHub := Hub{
+func NewHub[T any]() *Hub[T] {
+	newHub := Hub[T]{
 		HubId: uuid.NewString(),
-		Pools: []*Pool{},
+		Pools: []*Pool[T]{},
 	}
 
 	return &newHub
 }
 
-func NewClient(id string) *Client {
-	newClient := Client{
-		ID:         id,
-		ClientType: "default",
+func NewClient[T any](id string, info *T) *Client[T] {
+	newClient := Client[T]{
+		ID:   id,
+		Info: info,
 	}
 
 	return &newClient
 }
 
-func (client *Client) StartHandlingMessages(conn *websocket.Conn) {
+func (client *Client[T]) StartHandlingMessages(conn *websocket.Conn) {
 	client.Conn = conn
 	client.Receive = make(chan map[string]any)
 	client.Send = make(chan []byte)

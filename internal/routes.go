@@ -14,7 +14,7 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-func loadRoutes(router *chi.Mux, wsHub *ws.Hub) {
+func loadRoutes(router *chi.Mux, wsHub *ws.Hub[ClientInfoType]) {
 
 	// test route
 	router.Get("/marco", func(w http.ResponseWriter, r *http.Request) {
@@ -58,6 +58,9 @@ func loadRoutes(router *chi.Mux, wsHub *ws.Hub) {
 		pool := wsHub.NewPool()
 		newBoard := chessBoard.New()
 
+		clientInfo := clientContextData.WebsocketClient.Info
+		clientInfo.Type = PLAYER_W
+
 		poolToBoardMap[pool.ID] = newBoard
 
 		pool.Register <- clientContextData.WebsocketClient
@@ -88,6 +91,8 @@ func loadRoutes(router *chi.Mux, wsHub *ws.Hub) {
 		templates := ctx.Value(templatesContextKey).(*template.Template)
 		clientContextData := ctx.Value(clientContextDataKey).(*ClientContextData)
 		poolToBoardMap := ctx.Value(customMiddleware.PoolToBoardMapContextKey).(customMiddleware.PoolToBoardMap)
+		websocketClient := clientContextData.WebsocketClient
+		clientInfo := clientContextData.WebsocketClient.Info
 
 		err := r.ParseForm()
 		if err != nil {
@@ -97,7 +102,7 @@ func loadRoutes(router *chi.Mux, wsHub *ws.Hub) {
 
 		gameIdToJoin := r.FormValue("gameID")
 
-		var pool *ws.Pool
+		var pool *ws.Pool[ClientInfoType]
 		for _, poolToCheck := range wsHub.Pools {
 			if poolToCheck.ID == gameIdToJoin {
 				pool = poolToCheck
@@ -111,7 +116,13 @@ func loadRoutes(router *chi.Mux, wsHub *ws.Hub) {
 			return
 		}
 
-		pool.Register <- clientContextData.WebsocketClient
+		if len(pool.Clients) > 1 {
+			clientInfo.Type = SPECTATOR
+		} else {
+			clientInfo.Type = PLAYER_B
+		}
+
+		pool.Register <- websocketClient
 
 		w.Header().Set("Content-type", "text/html")
 
@@ -138,6 +149,7 @@ func loadRoutes(router *chi.Mux, wsHub *ws.Hub) {
 		ctx := r.Context()
 		templates := ctx.Value(templatesContextKey).(*template.Template)
 		clientContextData := ctx.Value(clientContextDataKey).(*ClientContextData)
+		clientInfo := clientContextData.WebsocketClient.Info
 		currentBoard := clientContextData.Board
 
 		// get data from request
@@ -151,7 +163,7 @@ func loadRoutes(router *chi.Mux, wsHub *ws.Hub) {
 		toSquareId := r.FormValue("to")
 		defer r.Body.Close()
 
-		err = ResolveSquareAndMakeMove(currentBoard, fromSquareId, toSquareId)
+		err = ResolveSquareAndMakeMove(currentBoard, clientInfo.Type, fromSquareId, toSquareId)
 
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
@@ -187,6 +199,7 @@ func loadRoutes(router *chi.Mux, wsHub *ws.Hub) {
 		templates := ctx.Value(templatesContextKey).(*template.Template)
 		clientContextData := ctx.Value(clientContextDataKey).(*ClientContextData)
 		clientContextData.WebsocketClient.StartHandlingMessages(conn)
+		clientInfo := clientContextData.WebsocketClient.Info
 		pool := clientContextData.Pool
 		board := clientContextData.Board
 
@@ -195,7 +208,7 @@ func loadRoutes(router *chi.Mux, wsHub *ws.Hub) {
 		go func() {
 			for msg := range clientContextData.WebsocketClient.Receive {
 				if msg["type"] == "move" {
-					err = ResolveSquareAndMakeMove(board, msg["from"].(string), msg["to"].(string))
+					err = ResolveSquareAndMakeMove(board, clientInfo.Type, msg["from"].(string), msg["to"].(string))
 					if err != nil {
 						spew.Println("Error making move:", err)
 						continue

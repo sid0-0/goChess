@@ -13,7 +13,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 )
 
-func setupRouter(allTemplates *template.Template, wsHub *ws.Hub) *chi.Mux {
+func setupRouter(allTemplates *template.Template, wsHub *ws.Hub[ClientInfoType]) *chi.Mux {
 	router := chi.NewRouter()
 	router.Use(middleware.RequestID)
 	router.Use(middleware.Logger)
@@ -43,7 +43,7 @@ func setupRouter(allTemplates *template.Template, wsHub *ws.Hub) *chi.Mux {
 			} else {
 				ctx = context.WithValue(ctx, clientContextDataKey, &ClientContextData{
 					Board:           nil,
-					WebsocketClient: ws.NewClient(sessionId.Value),
+					WebsocketClient: ws.NewClient(sessionId.Value, &ClientInfoType{Type: LURKER}),
 					Pool:            nil,
 				})
 
@@ -71,7 +71,7 @@ func RunServer() {
 	}
 
 	// Create a new chess board for local dev
-	wsHub := ws.NewHub()
+	wsHub := ws.NewHub[ClientInfoType]()
 
 	// Initialize the router
 	router := setupRouter(allTemplates, wsHub)
