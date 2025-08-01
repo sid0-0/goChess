@@ -76,7 +76,7 @@ func (b *Board) LoadBoard(fenString string) error {
 
 	// Assessing EnPassantSquare
 	if len(parts[3]) > 2 {
-		return errors.New("Incorrect EnPassant Square in FEN")
+		return errors.New("incorrect EnPassant Square in FEN")
 	}
 	if parts[3] != "-" {
 		r, c := int(parts[3][0]-'a'), int(parts[3][1]-'1')
@@ -86,19 +86,19 @@ func (b *Board) LoadBoard(fenString string) error {
 	// Loading HalfMoveCounter and FullMoveCounter
 	val, err := strconv.Atoi(parts[4])
 	if err != nil {
-		return errors.New("Incorrect Half move count format")
+		return errors.New("incorrect Half move count format")
 	}
 	b.HalfMoveCounter = val
 
 	val, err = strconv.Atoi(parts[4])
 	if err != nil {
-		return errors.New("Incorrect Full move count format")
+		return errors.New("incorrect full move count format")
 	}
 	b.FullMoveCounter = val
 
 	// Generating Board configuration
 	if len(parts) != 1 && len(parts) != 6 {
-		return errors.New("Insufficient data in FEN")
+		return errors.New("insufficient data in FEN")
 	}
 
 	placement := ""
@@ -111,11 +111,11 @@ func (b *Board) LoadBoard(fenString string) error {
 	}
 	rows := strings.Split(placement, "/")
 	if len(rows) != 8 {
-		return errors.New("Incorrect row count in FEN")
+		return errors.New("incorrect row count in FEN")
 	}
 	for _, row := range rows {
 		if len(row) != 8 {
-			return errors.New("Incorrect column count in FEN")
+			return errors.New("incorrect column count in FEN")
 		}
 	}
 
@@ -133,7 +133,7 @@ func (b *Board) LoadBoard(fenString string) error {
 			} else if 'A' <= cell && cell <= 'Z' {
 				currentSquare.Piece.Color = WHITE
 			} else {
-				return errors.New("Incorrect characters in FEN[casing]")
+				return errors.New("incorrect characters in FEN[casing]")
 			}
 
 			switch unicode.ToLower(cell) {
@@ -152,7 +152,7 @@ func (b *Board) LoadBoard(fenString string) error {
 			case 'p':
 				currentSquare.Piece.PieceType = PAWN
 			default:
-				return errors.New("Incorrect characters in FEN[spec]")
+				return errors.New("incorrect characters in FEN[spec]")
 			}
 		}
 	}
