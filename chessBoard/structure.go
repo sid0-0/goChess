@@ -42,7 +42,7 @@ type CastleRight struct {
 type Board struct {
 	Squares         [8][8]Square
 	Turn            COLOR
-	CastleRights    map[COLOR]CastleRight
+	CastleRights    map[COLOR]*CastleRight
 	EnPassantSquare *Square
 	HalfMoveCounter int
 	FullMoveCounter int
