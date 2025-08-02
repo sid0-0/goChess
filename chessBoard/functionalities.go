@@ -60,3 +60,31 @@ func (b *Board) MakeMove(oldSquare *Square, newSquare *Square) error {
 	}
 	return nil
 }
+
+func (b *Board) IsCheck() bool {
+	turnColor := b.Turn
+	kingSquareCandidates := b.findPiece(KING)
+	kingSquare := kingSquareCandidates[0]
+	if kingSquare.Piece.Color != turnColor {
+		kingSquare = kingSquareCandidates[1]
+	}
+	for _, row := range b.Squares {
+		for _, square := range row {
+			if square.Piece == nil || square.Piece.Color == turnColor {
+				continue
+			}
+			if slices.Contains(square.LegalMoves, kingSquare) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func (b *Board) IsStalemate() bool {
+	return b.hasNoMoves() && !b.IsCheck()
+}
+
+func (b *Board) IsCheckmate() bool {
+	return b.hasNoMoves() && b.IsCheck()
+}

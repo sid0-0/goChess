@@ -34,3 +34,15 @@ func (b *Board) isIndexInRange(r int, c int) bool {
 	}
 	return true
 }
+
+func (b *Board) hasNoMoves() bool {
+	turnColor := b.Turn
+	for _, row := range b.Squares {
+		for _, square := range row {
+			if square.Piece != nil && square.Piece.Color == turnColor && len(square.LegalMoves) > 0 {
+				return false
+			}
+		}
+	}
+	return true
+}

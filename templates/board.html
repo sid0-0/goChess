@@ -1,5 +1,18 @@
 {{ define "Board" }}
 <div id="board" class="board" hx-swap-oob="true">
+  {{ if or .winner .isDraw }}
+  <div class="absolute w-full h-full z-10 flex items-center justify-center">
+    <div class="bg-emerald-700 text-emerald-200 border-2 border-solid border-black size-fit top-50 left-50 p-4">
+      Game over! <br />
+      {{ if .winner }}
+      {{ .winner }} wins!
+      {{ end }}
+      {{ if .isDraw }}
+      It's a draw!
+      {{ end }}
+    </div>
+  </div>
+  {{ end }}
   {{ range .board }} {{ range . }} {{template "Square" dict "data" .}} {{end}}
   {{ end }}
 </div>
@@ -59,7 +72,7 @@
       }
     });
   </script>
-  <div hx-ext="ws" ws-connect="/ws/board" id="boardWebsocket">
+  <div hx-ext="ws" ws-connect="/ws/board" id="boardWebsocket" class="relative">
     {{ template "Board" . }}
   </div>
   {{ end }}
