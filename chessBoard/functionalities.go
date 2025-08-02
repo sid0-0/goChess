@@ -30,6 +30,26 @@ func (b *Board) MakeMove(oldSquare *Square, newSquare *Square) error {
 		}
 	}
 
+	if newSquare.Piece.PieceType == KING {
+		b.CastleRights[newSquare.Piece.Color] = &CastleRight{Long: false, Short: false}
+		// If the king moves two squares, it is a castling move
+		if math.Abs(float64(oldSquare.Ci-newSquare.Ci)) == 2 {
+			if newSquare.Ci > oldSquare.Ci {
+				// Long castling
+				rookSquare := b.GetSquare(newSquare.Ri, 7)
+				newRookSquare := b.GetSquare(newSquare.Ri, 5)
+				newRookSquare.Piece = rookSquare.Piece
+				rookSquare.Piece = nil
+			} else {
+				// Short castling
+				rookSquare := b.GetSquare(newSquare.Ri, 0)
+				newRookSquare := b.GetSquare(newSquare.Ri, 3)
+				newRookSquare.Piece = rookSquare.Piece
+				rookSquare.Piece = nil
+			}
+		}
+	}
+
 	err := b.EvaluateLegalMoves()
 	if err != nil {
 		return err
