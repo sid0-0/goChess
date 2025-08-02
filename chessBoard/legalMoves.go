@@ -4,7 +4,8 @@ import (
 	"slices"
 )
 
-func isLegalMove(b *Board, originalFrom *Square, originalTo *Square) bool {
+// checks if the move is legal by simulating the move and checking if the king is in check
+func (b *Board) isLegalMove(originalFrom *Square, originalTo *Square) bool {
 	boardCopy := *b
 
 	from := boardCopy.GetSquare(originalFrom.Ri, originalFrom.Ci)
@@ -29,9 +30,8 @@ func isLegalMove(b *Board, originalFrom *Square, originalTo *Square) bool {
 		kingSquare = kingSquares[1]
 	}
 
-	for i := range boardCopy.Squares {
-		for j := range boardCopy.Squares[i] {
-			square := &boardCopy.Squares[i][j]
+	for _, row := range boardCopy.Squares {
+		for _, square := range row {
 			if slices.Contains(square.PieceMoves, kingSquare) {
 				return false
 			}
@@ -43,7 +43,7 @@ func isLegalMove(b *Board, originalFrom *Square, originalTo *Square) bool {
 func (b *Board) LoadLegalMoves(currentSquare *Square) {
 	currentSquare.LegalMoves = []*Square{}
 	for _, move := range currentSquare.PieceMoves {
-		if isLegalMove(b, currentSquare, move) {
+		if b.isLegalMove(currentSquare, move) {
 			currentSquare.LegalMoves = append(currentSquare.LegalMoves, move)
 		}
 	}
