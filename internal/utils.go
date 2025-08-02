@@ -77,7 +77,10 @@ func ResolveSquareAndMakeMove(board *chessBoard.Board, playerType ClientType, fr
 	if toSquare == nil || fromSquare == nil {
 		return errors.New("invalid square")
 	}
-	err := board.MakeMove(fromSquare, toSquare)
+	err := board.MakeMove(chessBoard.MoveArgs{
+		FromSquare: fromSquare,
+		ToSquare:   toSquare,
+	})
 	return err
 }
 
