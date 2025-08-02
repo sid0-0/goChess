@@ -1,6 +1,7 @@
 package chessBoard
 
 import (
+	"math"
 	"slices"
 )
 
@@ -20,6 +21,20 @@ func (b *Board) isLegalMove(originalFrom *Square, originalTo *Square) bool {
 
 	to.Piece = from.Piece
 	from.Piece = nil
+
+	// validate castling move
+	if to.Piece.PieceType == KING && math.Abs(float64(to.Ci-from.Ci)) == 2 {
+		pieceColor := to.Piece.Color
+		if to.Ci > from.Ci {
+			if !boardCopy.CastleRights[pieceColor].Short || !b.isLegalMove(from, b.GetSquare(to.Ri, 5)) {
+				return false
+			}
+		} else {
+			if !boardCopy.CastleRights[pieceColor].Long || !b.isLegalMove(from, b.GetSquare(to.Ri, 3)) {
+				return false
+			}
+		}
+	}
 
 	boardCopy.EvaluatePieceMoves()
 
