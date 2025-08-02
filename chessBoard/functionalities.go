@@ -60,3 +60,15 @@ func (b *Board) MakeMove(oldSquare *Square, newSquare *Square) error {
 	}
 	return nil
 }
+
+func (b *Board) IsCheckmate() bool {
+	turnColor := b.Turn
+	for _, row := range b.Squares {
+		for _, square := range row {
+			if square.Piece != nil && square.Piece.Color == turnColor && len(square.LegalMoves) != 0 {
+				return false
+			}
+		}
+	}
+	return true
+}
