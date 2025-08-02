@@ -90,8 +90,10 @@ func GetBoardPlayerColorFromPlayerType(playerType ClientType) chessBoard.COLOR {
 	return chessBoard.WHITE
 }
 
-func GetCheckmateAndWinner(board *chessBoard.Board) (bool, string) {
+func GetGameTerminationStatus(board *chessBoard.Board) (bool, bool, bool, string) {
+	isDraw := board.IsStalemate()
 	isCheckmate := board.IsCheckmate()
+	hasGameEnded := isCheckmate || isDraw
 	var winner string
 	if isCheckmate {
 		if board.Turn == chessBoard.BLACK {
@@ -100,5 +102,5 @@ func GetCheckmateAndWinner(board *chessBoard.Board) (bool, string) {
 			winner = "BLACK"
 		}
 	}
-	return isCheckmate, winner
+	return hasGameEnded, isDraw, isCheckmate, winner
 }

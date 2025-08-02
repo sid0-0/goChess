@@ -39,7 +39,7 @@ func loadRoutes(router *chi.Mux, wsHub *ws.Hub[ClientInfoType]) {
 			jsonLegalMoves, _ := json.Marshal(map[string]any{"loadLegalMoves": legalMoves})
 			w.Header().Set("HX-Trigger", string(jsonLegalMoves))
 
-			isCheckmate, winner := GetCheckmateAndWinner(currentBoard)
+			_, isDraw, isCheckmate, winner := GetGameTerminationStatus(currentBoard)
 			boardPlayerColor := GetBoardPlayerColorFromPlayerType(clientInfo.Type)
 			templateArgs := map[string]any{
 				"board":      currentBoard.GetRepresentationalSquares(boardPlayerColor),
@@ -48,6 +48,8 @@ func loadRoutes(router *chi.Mux, wsHub *ws.Hub[ClientInfoType]) {
 			}
 			if isCheckmate {
 				templateArgs["winner"] = winner
+			} else if isDraw {
+				templateArgs["isDraw"] = true
 			}
 			err = templates.ExecuteTemplate(w, "Main", templateArgs)
 		}
@@ -225,7 +227,7 @@ func loadRoutes(router *chi.Mux, wsHub *ws.Hub[ClientInfoType]) {
 						continue
 					}
 
-					isCheckmate, winner := GetCheckmateAndWinner(board)
+					_, isDraw, isCheckmate, winner := GetGameTerminationStatus(board)
 					for _, client := range pool.Clients {
 						var buffer bytes.Buffer
 						boardPlayerColor := GetBoardPlayerColorFromPlayerType(client.Info.Type)
@@ -234,6 +236,8 @@ func loadRoutes(router *chi.Mux, wsHub *ws.Hub[ClientInfoType]) {
 						}
 						if isCheckmate {
 							templateArgs["winner"] = winner
+						} else if isDraw {
+							templateArgs["isDraw"] = true
 						}
 						templates.ExecuteTemplate(&buffer, "Board", templateArgs)
 						client.Send <- buffer.Bytes()
