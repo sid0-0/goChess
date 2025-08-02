@@ -38,17 +38,15 @@ func GetLoadLegalMovesJson(board *chessBoard.Board) template.JS {
 		// collect all legal moves in an object
 		for _, row := range board.Squares {
 			for _, square := range row {
-				if square.Piece == nil || square.Piece.Color != board.Turn {
-					continue // skip squares that are not the current player's turn
-				}
+				// if square.Piece == nil || square.Piece.Color != board.Turn {
+				// 	continue // skip squares that are not the current player's turn
+				// }
 				squareNotation := square.File + square.Rank
 				legalMovesForSquare := []string{}
 				for _, square := range square.LegalMoves {
 					legalMovesForSquare = append(legalMovesForSquare, square.File+square.Rank)
 				}
-				if len(legalMovesForSquare) > 0 {
-					allLegalMoves[squareNotation] = legalMovesForSquare
-				}
+				allLegalMoves[squareNotation] = legalMovesForSquare
 			}
 		}
 		dataMapJson, err := json.Marshal(allLegalMoves)
@@ -70,9 +68,9 @@ func ResolveSquare(board *chessBoard.Board, squareId string) *chessBoard.Square 
 }
 
 func ResolveSquareAndMakeMove(board *chessBoard.Board, playerType ClientType, fromSquareId string, toSquareId string) error {
-	// if !((playerType == PLAYER_W && board.Turn == chessBoard.WHITE) || (playerType == PLAYER_B && board.Turn == chessBoard.BLACK)) {
-	// 	return errors.New("it's not your turn")
-	// }
+	if !((playerType == PLAYER_W && board.Turn == chessBoard.WHITE) || (playerType == PLAYER_B && board.Turn == chessBoard.BLACK)) {
+		return errors.New("it's not your turn")
+	}
 	fromSquare := ResolveSquare(board, fromSquareId)
 	toSquare := ResolveSquare(board, toSquareId)
 
