@@ -18,8 +18,10 @@ func (b *Board) EvaluatePieceMoves() error {
 			switch pieceType {
 			case PAWN:
 				b.loadPawnPieceMoves(square)
-			case KING, KNIGHT:
+			case KNIGHT:
 				b.specificSearch(square)
+			case KING:
+				b.loadKingPieceMoves(square)
 			default:
 				b.fullBoardSearch(square)
 			}
@@ -50,10 +52,6 @@ func (b *Board) LoadBoard(fenString string) error {
 	}
 
 	// Assessing CastleRights
-	newCastleRights := map[COLOR]CastleRight{
-		WHITE: {},
-		BLACK: {},
-	}
 	if rights, ok := b.CastleRights[WHITE]; ok {
 		if strings.ContainsRune(parts[2], 'K') {
 			rights.Long = true
@@ -71,8 +69,6 @@ func (b *Board) LoadBoard(fenString string) error {
 			rights.Short = true
 		}
 	}
-
-	b.CastleRights = newCastleRights
 
 	// Assessing EnPassantSquare
 	if len(parts[3]) > 2 {

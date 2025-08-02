@@ -88,6 +88,25 @@ func (b *Board) specificSearch(currentSquare *Square) {
 	currentSquare.PieceMoves = newData
 }
 
+func (b *Board) loadKingPieceMoves(currentSquare *Square) {
+	// load direct movement
+	b.specificSearch(currentSquare)
+	// load castling moves
+	pieceColor := currentSquare.Piece.Color
+	ri := currentSquare.Ri
+	if b.CastleRights[pieceColor].Long && b.Squares[ri][3].Piece == nil && b.Squares[ri][2].Piece == nil && b.Squares[ri][1].Piece == nil {
+		currentSquare.PieceMoves = append(currentSquare.PieceMoves, b.GetSquare(ri, 2))
+	}
+	if b.CastleRights[pieceColor].Short && b.Squares[ri][5].Piece == nil && b.Squares[ri][6].Piece == nil {
+		currentSquare.PieceMoves = append(currentSquare.PieceMoves, b.GetSquare(ri, 6))
+	}
+
+	pieceMoveSquares := make([]string, len(currentSquare.PieceMoves))
+	for i, square := range currentSquare.PieceMoves {
+		pieceMoveSquares[i] = square.File + square.Rank
+	}
+}
+
 func (b *Board) loadPawnPieceMoves(currentSquare *Square) {
 	var newData []*Square
 	multiplier := 1
