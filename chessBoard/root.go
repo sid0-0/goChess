@@ -7,10 +7,7 @@ import (
 
 func New() *Board {
 	newBoard := Board{}
-	newBoard.CastleRights = map[COLOR]*CastleRight{
-		WHITE: {Long: true, Short: true},
-		BLACK: {Long: true, Short: true},
-	}
+	newBoard.CastleRights = map[COLOR]*CastleRight{}
 	for i := 0; i < 64; i++ {
 		r, c := i/8, i%8
 		currentSquare := &newBoard.Squares[r][c]
