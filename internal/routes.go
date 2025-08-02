@@ -39,12 +39,17 @@ func loadRoutes(router *chi.Mux, wsHub *ws.Hub[ClientInfoType]) {
 			jsonLegalMoves, _ := json.Marshal(map[string]any{"loadLegalMoves": legalMoves})
 			w.Header().Set("HX-Trigger", string(jsonLegalMoves))
 
+			isCheckmate, winner := GetCheckmateAndWinner(currentBoard)
 			boardPlayerColor := GetBoardPlayerColorFromPlayerType(clientInfo.Type)
-			err = templates.ExecuteTemplate(w, "Main", map[string]any{
+			templateArgs := map[string]any{
 				"board":      currentBoard.GetRepresentationalSquares(boardPlayerColor),
 				"legalMoves": legalMoves,
 				"boardID":    pool.ID,
-			})
+			}
+			if isCheckmate {
+				templateArgs["winner"] = winner
+			}
+			err = templates.ExecuteTemplate(w, "Main", templateArgs)
 		}
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
@@ -219,12 +224,18 @@ func loadRoutes(router *chi.Mux, wsHub *ws.Hub[ClientInfoType]) {
 						log.Println("Error making move:", err)
 						continue
 					}
+
+					isCheckmate, winner := GetCheckmateAndWinner(board)
 					for _, client := range pool.Clients {
 						var buffer bytes.Buffer
 						boardPlayerColor := GetBoardPlayerColorFromPlayerType(client.Info.Type)
-						templates.ExecuteTemplate(&buffer, "Board", map[string]any{
+						templateArgs := map[string]any{
 							"board": board.GetRepresentationalSquares(boardPlayerColor),
-						})
+						}
+						if isCheckmate {
+							templateArgs["winner"] = winner
+						}
+						templates.ExecuteTemplate(&buffer, "Board", templateArgs)
 						client.Send <- buffer.Bytes()
 					}
 					legalMoves := GetLoadLegalMovesJson(board)
