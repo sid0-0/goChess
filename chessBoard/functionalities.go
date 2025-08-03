@@ -15,6 +15,9 @@ type MoveArgs struct {
 func (b *Board) IsPromotionMove(args MoveArgs) bool {
 	from := args.FromSquare
 	to := args.ToSquare
+	if from == nil || to == nil {
+		return false
+	}
 	if from.Piece.PieceType == PAWN && (to.Ri == 0 || to.Ri == 7) {
 		return true
 	}

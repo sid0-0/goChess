@@ -175,7 +175,12 @@ func loadRoutes(router *chi.Mux, wsHub *ws.Hub[ClientInfoType]) {
 		toSquareId := r.FormValue("to")
 		defer r.Body.Close()
 
-		err = ResolveSquareAndMakeMove(currentBoard, clientInfo.Type, fromSquareId, toSquareId)
+		err = ResolveSquareAndMakeMove(MakeMoveArgs{
+			Board:        currentBoard,
+			PlayerType:   clientInfo.Type,
+			FromSquareId: fromSquareId,
+			ToSquareId:   toSquareId,
+		})
 
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
@@ -221,7 +226,33 @@ func loadRoutes(router *chi.Mux, wsHub *ws.Hub[ClientInfoType]) {
 		go func() {
 			for msg := range clientContextData.WebsocketClient.Receive {
 				if msg["type"] == "move" {
-					err = ResolveSquareAndMakeMove(board, clientInfo.Type, msg["from"].(string), msg["to"].(string))
+					fromSquareId, toSquareId := msg["from"].(string), msg["to"].(string)
+					isPromotionMove, err := ResolveSquareAndCheckPromotion(MakeMoveArgs{
+						Board:        board,
+						FromSquareId: fromSquareId,
+						ToSquareId:   toSquareId,
+					})
+					if err != nil {
+						log.Println("Error checking promotion:", err)
+						continue
+					}
+					makeMoveArgs := MakeMoveArgs{
+						Board:        board,
+						PlayerType:   clientInfo.Type,
+						FromSquareId: msg["from"].(string),
+						ToSquareId:   msg["to"].(string),
+					}
+
+					if isPromotionMove {
+						promoteToPieceType, ok := msg["promoteTo"].(chessBoard.PIECE_TYPE)
+						if !ok {
+							log.Println("Invalid promotion piece type")
+							// TODO: Show piece type selection UI
+							continue
+						}
+						makeMoveArgs.PromotionPieceType = promoteToPieceType
+					}
+					err = ResolveSquareAndMakeMove(makeMoveArgs)
 					if err != nil {
 						log.Println("Error making move:", err)
 						continue

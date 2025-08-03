@@ -67,7 +67,37 @@ func ResolveSquare(board *chessBoard.Board, squareId string) *chessBoard.Square 
 	return square
 }
 
-func ResolveSquareAndMakeMove(board *chessBoard.Board, playerType ClientType, fromSquareId string, toSquareId string) error {
+type MakeMoveArgs struct {
+	Board              *chessBoard.Board
+	PlayerType         ClientType
+	FromSquareId       string
+	ToSquareId         string
+	PromotionPieceType chessBoard.PIECE_TYPE
+}
+
+func ResolveSquareAndCheckPromotion(args MakeMoveArgs) (bool, error) {
+	board := args.Board
+	fromSquareId, toSquareId := args.FromSquareId, args.ToSquareId
+
+	fromSquare := ResolveSquare(board, fromSquareId)
+	toSquare := ResolveSquare(board, toSquareId)
+
+	if toSquare == nil || fromSquare == nil {
+		return false, errors.New("invalid square")
+	}
+
+	return board.IsPromotionMove(chessBoard.MoveArgs{
+		FromSquare: fromSquare,
+		ToSquare:   toSquare,
+	}), nil
+}
+
+func ResolveSquareAndMakeMove(args MakeMoveArgs) error {
+	board := args.Board
+	playerType := args.PlayerType
+	fromSquareId, toSquareId := args.FromSquareId, args.ToSquareId
+	promotionPieceType := args.PromotionPieceType
+
 	if !((playerType == PLAYER_W && board.Turn == chessBoard.WHITE) || (playerType == PLAYER_B && board.Turn == chessBoard.BLACK)) {
 		return errors.New("it's not your turn")
 	}
@@ -78,8 +108,9 @@ func ResolveSquareAndMakeMove(board *chessBoard.Board, playerType ClientType, fr
 		return errors.New("invalid square")
 	}
 	err := board.MakeMove(chessBoard.MoveArgs{
-		FromSquare: fromSquare,
-		ToSquare:   toSquare,
+		FromSquare:         fromSquare,
+		ToSquare:           toSquare,
+		PromotionPieceType: promotionPieceType,
 	})
 	return err
 }
