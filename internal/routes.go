@@ -245,7 +245,7 @@ func loadRoutes(router *chi.Mux, wsHub *ws.Hub[ClientInfoType]) {
 					}
 
 					if isPromotionMove {
-						promoteToPieceType, ok := msg["promoteTo"].(chessBoard.PIECE_TYPE)
+						promoteToPieceType, ok := msg["promoteTo"].(string)
 						if !ok {
 							var buffer bytes.Buffer
 							boardPlayerColor := GetBoardPlayerColorFromPlayerType(client.Info.Type)
@@ -258,7 +258,7 @@ func loadRoutes(router *chi.Mux, wsHub *ws.Hub[ClientInfoType]) {
 							client.Send <- buffer.Bytes()
 							continue
 						}
-						makeMoveArgs.PromotionPieceType = promoteToPieceType
+						makeMoveArgs.PromotionPieceType = chessBoard.PIECE_TYPE(promoteToPieceType)
 					}
 					err = ResolveSquareAndMakeMove(makeMoveArgs)
 					if err != nil {

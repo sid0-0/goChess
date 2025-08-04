@@ -38,6 +38,8 @@ func (b *Board) MakeMove(args MoveArgs) error {
 		return errors.New("invalid move")
 	}
 
+	isPromotionMove := b.IsPromotionMove(args)
+
 	newSquare.Piece = oldSquare.Piece
 	oldSquare.Piece = nil
 
@@ -52,7 +54,7 @@ func (b *Board) MakeMove(args MoveArgs) error {
 			squareToClear.Piece = nil
 		}
 		// Handle pawn promotion
-		if b.IsPromotionMove(args) {
+		if isPromotionMove {
 			newSquare.Piece.PieceType = promotionPieceType
 		}
 	}
