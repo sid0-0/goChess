@@ -9,6 +9,7 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"slices"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/gorilla/websocket"
@@ -175,7 +176,12 @@ func loadRoutes(router *chi.Mux, wsHub *ws.Hub[ClientInfoType]) {
 		toSquareId := r.FormValue("to")
 		defer r.Body.Close()
 
-		err = ResolveSquareAndMakeMove(currentBoard, clientInfo.Type, fromSquareId, toSquareId)
+		err = ResolveSquareAndMakeMove(MakeMoveArgs{
+			Board:        currentBoard,
+			PlayerType:   clientInfo.Type,
+			FromSquareId: fromSquareId,
+			ToSquareId:   toSquareId,
+		})
 
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
@@ -212,7 +218,8 @@ func loadRoutes(router *chi.Mux, wsHub *ws.Hub[ClientInfoType]) {
 		templates := ctx.Value(templatesContextKey).(*template.Template)
 		clientContextData := ctx.Value(clientContextDataKey).(*ClientContextData)
 		clientContextData.WebsocketClient.StartHandlingMessages(conn)
-		clientInfo := clientContextData.WebsocketClient.Info
+		client := clientContextData.WebsocketClient
+		clientInfo := client.Info
 		pool := clientContextData.Pool
 		board := clientContextData.Board
 
@@ -221,16 +228,55 @@ func loadRoutes(router *chi.Mux, wsHub *ws.Hub[ClientInfoType]) {
 		go func() {
 			for msg := range clientContextData.WebsocketClient.Receive {
 				if msg["type"] == "move" {
-					err = ResolveSquareAndMakeMove(board, clientInfo.Type, msg["from"].(string), msg["to"].(string))
+					fromSquareId, toSquareId := msg["from"].(string), msg["to"].(string)
+					fromSquare := ResolveSquare(board, fromSquareId)
+					toSquare := ResolveSquare(board, toSquareId)
+					isMoveLegal := slices.Contains(fromSquare.LegalMoves, toSquare)
+					if !isMoveLegal {
+						log.Println("Illegal move attempted:", fromSquareId, "to", toSquareId)
+						continue
+					}
+					isPromotionMove, err := ResolveSquareAndCheckPromotion(MakeMoveArgs{
+						Board:        board,
+						FromSquareId: fromSquareId,
+						ToSquareId:   toSquareId,
+					})
+					if err != nil {
+						log.Println("Error checking promotion:", err)
+						continue
+					}
+					makeMoveArgs := MakeMoveArgs{
+						Board:        board,
+						PlayerType:   clientInfo.Type,
+						FromSquareId: msg["from"].(string),
+						ToSquareId:   msg["to"].(string),
+					}
+
+					if isPromotionMove {
+						promoteToPieceType, ok := msg["promoteTo"].(string)
+						if !ok {
+							var buffer bytes.Buffer
+							templateArgs := map[string]any{
+								"data":           ResolveSquare(board, toSquareId),
+								"isPromoting":    true,
+								"promotionColor": fromSquare.Piece.Color,
+							}
+							templates.ExecuteTemplate(&buffer, "Square", templateArgs)
+							client.Send <- buffer.Bytes()
+							continue
+						}
+						makeMoveArgs.PromotionPieceType = chessBoard.PIECE_TYPE(promoteToPieceType)
+					}
+					err = ResolveSquareAndMakeMove(makeMoveArgs)
 					if err != nil {
 						log.Println("Error making move:", err)
 						continue
 					}
 
 					_, isDraw, isCheckmate, winner := GetGameTerminationStatus(board)
-					for _, client := range pool.Clients {
+					for _, poolClient := range pool.Clients {
 						var buffer bytes.Buffer
-						boardPlayerColor := GetBoardPlayerColorFromPlayerType(client.Info.Type)
+						boardPlayerColor := GetBoardPlayerColorFromPlayerType(poolClient.Info.Type)
 						templateArgs := map[string]any{
 							"board": board.GetRepresentationalSquares(boardPlayerColor),
 						}
@@ -240,7 +286,7 @@ func loadRoutes(router *chi.Mux, wsHub *ws.Hub[ClientInfoType]) {
 							templateArgs["isDraw"] = true
 						}
 						templates.ExecuteTemplate(&buffer, "Board", templateArgs)
-						client.Send <- buffer.Bytes()
+						poolClient.Send <- buffer.Bytes()
 					}
 					legalMoves := GetLoadLegalMovesJson(board)
 					pool.Broadcast <- []byte(`{"type": "loadLegalMoves", "data": ` + legalMoves + `}`)

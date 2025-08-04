@@ -5,15 +5,18 @@
     <div class="bg-emerald-700 text-emerald-200 border-2 border-solid border-black size-fit top-50 left-50 p-4">
       Game over! <br />
       {{ if .winner }}
-      {{ .winner }} wins!
+        {{ .winner }} wins!
       {{ end }}
       {{ if .isDraw }}
-      It's a draw!
+        It's a draw!
       {{ end }}
     </div>
   </div>
   {{ end }}
-  {{ range .board }} {{ range . }} {{template "Square" dict "data" .}} {{end}}
+  {{ range .board }}
+    {{ range . }}
+      {{template "Square" dict "data" .}}
+    {{end}}
   {{ end }}
 </div>
 {{ end }}

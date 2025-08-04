@@ -1,14 +1,29 @@
 {{ define "Square" }}
 <div id="{{.data.File}}{{.data.Rank}}"
-  class="bg-{{if .data.Color}}yellow-700{{else}}yellow-50{{end}} flex items-center grid-justify-center relative" ws-send
+  class="bg-{{if .data.Color}}yellow-700{{else}}yellow-50{{end}} flex items-center grid-justify-center relative"
+  {{ if not .isPromoting }}
+    ws-send
+  {{ end }}
   hx-trigger="click"
   hx-vals='js:{"from": window.highlightedSourceSquare, "to": "{{.data.File}}{{.data.Rank}}", "type":"move"}'
   hx-swap-oob="true">
+  {{ if .isPromoting }}
+    <div
+      class="h-[400%] absolute w-full z-10 bg-emerald-100 border border-emerald-200 border-solid top-0 rounded-lg flex flex-col items-center justify-center cursor-pointer"
+      ws-send
+      hx-vals='js:{"from": window.highlightedSourceSquare, "to": "{{.data.File}}{{.data.Rank}}", "promoteTo": event.target.dataset.pieceType, "type":"move"}'>
+      <div class="piece_Q{{.promotionColor}} h-1/4 hover:bg-emerald-200" data-piece-type="Q"></div>
+      <div class="piece_R{{.promotionColor}} h-1/4 hover:bg-emerald-200" data-piece-type="R"></div>
+      <div class="piece_B{{.promotionColor}} h-1/4 hover:bg-emerald-200" data-piece-type="B"></div>
+      <div class="piece_N{{.promotionColor}} h-1/4 hover:bg-emerald-200" data-piece-type="N"></div>
+    </div>
+  {{end}}
   {{if .data.Piece}}
-  <img class="piece piece_{{.data.Piece.PieceType}}{{.data.Piece.Color}} h-full cursor-grab" hx-include="img"
-    onclick="highlightMoves('{{.data.File}}','{{.data.Rank}}')" />
-  {{end}} {{if .highlight}}
-  <div class="legalMove {{if .data.Piece}} legalMove_attacking {{else}} legalMove_nonAttacking {{end}}"></div>
+    <img class="piece piece_{{.data.Piece.PieceType}}{{.data.Piece.Color}} h-full cursor-grab" hx-include="img"
+      onclick="highlightMoves('{{.data.File}}','{{.data.Rank}}')" />
+  {{end}}
+  {{if .highlight}}
+    <div class="legalMove {{if .data.Piece}} legalMove_attacking {{else}} legalMove_nonAttacking {{end}}"></div>
   {{end}}
 </div>
 
