@@ -9,6 +9,7 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"slices"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/gorilla/websocket"
@@ -228,6 +229,13 @@ func loadRoutes(router *chi.Mux, wsHub *ws.Hub[ClientInfoType]) {
 			for msg := range clientContextData.WebsocketClient.Receive {
 				if msg["type"] == "move" {
 					fromSquareId, toSquareId := msg["from"].(string), msg["to"].(string)
+					fromSquare := ResolveSquare(board, fromSquareId)
+					toSquare := ResolveSquare(board, toSquareId)
+					isMoveLegal := slices.Contains(fromSquare.LegalMoves, toSquare)
+					if !isMoveLegal {
+						log.Println("Illegal move attempted:", fromSquareId, "to", toSquareId)
+						continue
+					}
 					isPromotionMove, err := ResolveSquareAndCheckPromotion(MakeMoveArgs{
 						Board:        board,
 						FromSquareId: fromSquareId,
@@ -248,11 +256,10 @@ func loadRoutes(router *chi.Mux, wsHub *ws.Hub[ClientInfoType]) {
 						promoteToPieceType, ok := msg["promoteTo"].(string)
 						if !ok {
 							var buffer bytes.Buffer
-							boardPlayerColor := GetBoardPlayerColorFromPlayerType(client.Info.Type)
 							templateArgs := map[string]any{
 								"data":           ResolveSquare(board, toSquareId),
 								"isPromoting":    true,
-								"promotionColor": boardPlayerColor,
+								"promotionColor": fromSquare.Piece.Color,
 							}
 							templates.ExecuteTemplate(&buffer, "Square", templateArgs)
 							client.Send <- buffer.Bytes()
