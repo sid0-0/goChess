@@ -217,7 +217,8 @@ func loadRoutes(router *chi.Mux, wsHub *ws.Hub[ClientInfoType]) {
 		templates := ctx.Value(templatesContextKey).(*template.Template)
 		clientContextData := ctx.Value(clientContextDataKey).(*ClientContextData)
 		clientContextData.WebsocketClient.StartHandlingMessages(conn)
-		clientInfo := clientContextData.WebsocketClient.Info
+		client := clientContextData.WebsocketClient
+		clientInfo := client.Info
 		pool := clientContextData.Pool
 		board := clientContextData.Board
 
@@ -246,8 +247,15 @@ func loadRoutes(router *chi.Mux, wsHub *ws.Hub[ClientInfoType]) {
 					if isPromotionMove {
 						promoteToPieceType, ok := msg["promoteTo"].(chessBoard.PIECE_TYPE)
 						if !ok {
-							log.Println("Invalid promotion piece type")
-							// TODO: Show piece type selection UI
+							var buffer bytes.Buffer
+							boardPlayerColor := GetBoardPlayerColorFromPlayerType(client.Info.Type)
+							templateArgs := map[string]any{
+								"data":           ResolveSquare(board, toSquareId),
+								"isPromoting":    true,
+								"promotionColor": boardPlayerColor,
+							}
+							templates.ExecuteTemplate(&buffer, "Square", templateArgs)
+							client.Send <- buffer.Bytes()
 							continue
 						}
 						makeMoveArgs.PromotionPieceType = promoteToPieceType
@@ -259,9 +267,9 @@ func loadRoutes(router *chi.Mux, wsHub *ws.Hub[ClientInfoType]) {
 					}
 
 					_, isDraw, isCheckmate, winner := GetGameTerminationStatus(board)
-					for _, client := range pool.Clients {
+					for _, poolClient := range pool.Clients {
 						var buffer bytes.Buffer
-						boardPlayerColor := GetBoardPlayerColorFromPlayerType(client.Info.Type)
+						boardPlayerColor := GetBoardPlayerColorFromPlayerType(poolClient.Info.Type)
 						templateArgs := map[string]any{
 							"board": board.GetRepresentationalSquares(boardPlayerColor),
 						}
@@ -271,7 +279,7 @@ func loadRoutes(router *chi.Mux, wsHub *ws.Hub[ClientInfoType]) {
 							templateArgs["isDraw"] = true
 						}
 						templates.ExecuteTemplate(&buffer, "Board", templateArgs)
-						client.Send <- buffer.Bytes()
+						poolClient.Send <- buffer.Bytes()
 					}
 					legalMoves := GetLoadLegalMovesJson(board)
 					pool.Broadcast <- []byte(`{"type": "loadLegalMoves", "data": ` + legalMoves + `}`)
