@@ -220,6 +220,7 @@ func loadRoutes(router *chi.Mux, wsHub *ws.Hub[ClientInfoType]) {
 		clientContextData.WebsocketClient.StartHandlingMessages(conn)
 		client := clientContextData.WebsocketClient
 		clientInfo := client.Info
+		poolToBoardMap := ctx.Value(customMiddleware.PoolToBoardMapContextKey).(customMiddleware.PoolToBoardMap)
 		pool := clientContextData.Pool
 		board := clientContextData.Board
 
@@ -273,7 +274,7 @@ func loadRoutes(router *chi.Mux, wsHub *ws.Hub[ClientInfoType]) {
 						continue
 					}
 
-					_, isDraw, isCheckmate, winner := GetGameTerminationStatus(board)
+					hasGameEnded, isDraw, isCheckmate, winner := GetGameTerminationStatus(board)
 					for _, poolClient := range pool.Clients {
 						var buffer bytes.Buffer
 						boardPlayerColor := GetBoardPlayerColorFromPlayerType(poolClient.Info.Type)
@@ -290,6 +291,15 @@ func loadRoutes(router *chi.Mux, wsHub *ws.Hub[ClientInfoType]) {
 					}
 					legalMoves := GetLoadLegalMovesJson(board)
 					pool.Broadcast <- []byte(`{"type": "loadLegalMoves", "data": ` + legalMoves + `}`)
+					if hasGameEnded {
+						for _, hubPool := range wsHub.Pools {
+							if hubPool.ID == pool.ID {
+								delete(wsHub.Pools, hubPool.ID)
+								delete(poolToBoardMap, hubPool.ID)
+								break
+							}
+						}
+					}
 				}
 			}
 		}()

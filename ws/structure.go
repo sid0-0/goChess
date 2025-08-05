@@ -20,6 +20,6 @@ type Pool[ClientInfoType any] struct {
 }
 
 type Hub[ClientInfoType any] struct {
-	HubId string                  // Unique identifier for the hub
-	Pools []*Pool[ClientInfoType] // Map of pools, each containing clients
+	HubId string                           // Unique identifier for the hub
+	Pools map[string]*Pool[ClientInfoType] // Map of pools, each containing clients
 }

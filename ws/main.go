@@ -56,13 +56,7 @@ func (hub *Hub[T]) NewPool() *Pool[T] {
 						// cleanup pool if no clients left
 						if len(newPool.Clients) == 0 {
 							log.Println("No clients left in pool, removing pool:", newPool.ID)
-							for idx, hubPool := range hub.Pools {
-								if hubPool.ID == newPool.ID {
-									log.Println("Found pool to remove:", hubPool.ID)
-									// Remove the pool from the hub
-									hub.Pools = append(hub.Pools[:idx], hub.Pools[idx+1:]...)
-								}
-							}
+							delete(hub.Pools, newPool.ID)
 							return
 						}
 					}
@@ -75,14 +69,14 @@ func (hub *Hub[T]) NewPool() *Pool[T] {
 			}
 		}
 	}()
-	hub.Pools = append(hub.Pools, newPool)
+	hub.Pools[newPool.ID] = newPool
 	return newPool
 }
 
 func NewHub[T any]() *Hub[T] {
 	newHub := Hub[T]{
 		HubId: uuid.NewString(),
-		Pools: []*Pool[T]{},
+		Pools: map[string]*Pool[T]{},
 	}
 
 	return &newHub
